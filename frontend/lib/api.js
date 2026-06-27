@@ -1,13 +1,16 @@
 "use client";
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const isBrowser = typeof window !== "undefined";
+const apiBaseUrl = isBrowser ? "/api" : API_URL ? `${API_URL}/api` : "/api";
 
-const api = axios.create({ baseURL: `${API_URL}/api` });
+const api = axios.create({ baseURL: apiBaseUrl });
 
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("v2s_access");
+    config.headers = config.headers || {};
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -33,7 +36,8 @@ api.interceptors.response.use(
       original._retry = true;
       isRefreshing = true;
       try {
-        const { data } = await axios.post(`${API_URL}/api/auth/refresh`, { refreshToken });
+        const refreshUrl = "/api/auth/refresh";
+        const { data } = await axios.post(refreshUrl, { refreshToken });
         localStorage.setItem("v2s_access", data.accessToken);
         queue.forEach(({ resolve, original: o }) => {
           o.headers.Authorization = `Bearer ${data.accessToken}`;

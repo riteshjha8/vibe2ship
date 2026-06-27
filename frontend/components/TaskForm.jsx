@@ -21,6 +21,14 @@ function splitPhoneNumber(fullNumber) {
 }
 
 export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
+  const IMPORTANCE_OPTIONS = [
+    { value: 1, label: "1 - Low" },
+    { value: 2, label: "2 - Mild" },
+    { value: 3, label: "3 - Normal" },
+    { value: 4, label: "4 - High" },
+    { value: 5, label: "5 - Critical" },
+  ];
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -145,10 +153,13 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <form onSubmit={submit} className="glass-card rounded-2xl w-full max-w-md p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display font-semibold text-lg">{task ? "Edit task" : "New task"}</h3>
+    <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <form
+        onSubmit={submit}
+        className="glass-card rounded-t-3xl sm:rounded-3xl w-full h-full sm:h-auto max-w-full sm:max-w-[min(720px,calc(100vw-1.5rem))] max-h-full sm:max-h-[calc(100vh-2rem)] overflow-y-auto p-4 sm:p-6 space-y-4 shadow-2xl border border-white/10"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-display font-semibold text-base sm:text-lg">{task ? "Edit task" : "New task"}</h3>
           <button type="button" onClick={onClose} className="text-slate-300 hover:text-white">✕</button>
         </div>
 
@@ -177,13 +188,13 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             </p>
           </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Category</label>
             <input
               value={form.category}
               onChange={(e) => update("category", e.target.value)}
-              className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
             />
           </div>
           <div>
@@ -191,12 +202,15 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             <select
               value={form.importance}
               onChange={(e) => update("importance", Number(e.target.value))}
-              className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-teal-400 outline-none"
             >
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>{n} {n === 5 ? "(Critical)" : n === 1 ? "(Low)" : ""}</option>
+              {IMPORTANCE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
+            <p className="mt-2 text-xs text-slate-400">
+              Set importance to surface high-priority tasks more clearly in your list.
+            </p>
           </div>
         </div>
 
@@ -206,21 +220,21 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             type="datetime-local"
             value={form.deadlineLocal}
             onChange={(e) => update("deadlineLocal", e.target.value)}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+            className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-teal-400 outline-none"
             required
           />
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             Detected timezone: {detectTimezone()}. Reminders fire at the thresholds you choose, adjusted correctly for your location.
           </p>
         </div>
 
         <div>
           <label className="block text-xs text-slate-400 mb-1">Mobile number for SMS reminders</label>
-          <div className="grid grid-cols-[110px_1fr] gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] gap-2">
             <select
               value={form.smsCountryCode}
               onChange={(e) => update("smsCountryCode", e.target.value)}
-              className="rounded-lg bg-slate-950/90 border border-slate-600 px-3 py-2 text-sm text-slate-100 focus:border-transparent focus:ring-2 focus:ring-teal-400 outline-none"
+              className="rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-teal-400 outline-none"
             >
               <option value="+1">+1 US</option>
               <option value="+44">+44 UK</option>
@@ -234,11 +248,11 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
               type="tel"
               value={form.smsNumber}
               onChange={(e) => update("smsNumber", e.target.value)}
-              className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
               placeholder="1234567890"
             />
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-xs text-slate-400 mt-2">
             Choose your country code and enter the rest of your mobile number. SMS reminders will be sent to the full international number.
           </p>
         </div>
@@ -258,7 +272,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
 
         <div>
           <label className="block text-xs text-slate-400 mb-1">Reminder times</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {[
               { value: "24h", label: "24 hours" },
               { value: "5h", label: "5 hours" },

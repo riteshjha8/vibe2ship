@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import TaskCard from "@/components/TaskCard";
 import TaskForm from "@/components/TaskForm";
+import AIStatusPanel from "@/components/AIStatusPanel";
+import TaskSearchPanel from "@/components/TaskSearchPanel";
 import api from "@/lib/api";
 
 const FILTERS = [
@@ -24,6 +26,8 @@ export default function TasksPage() {
     try {
       const { data } = await api.get("/tasks");
       setTasks(data.tasks);
+    } catch (error) {
+      console.error("Failed to load tasks", error);
     } finally {
       setLoading(false);
     }
@@ -78,17 +82,25 @@ export default function TasksPage() {
         ))}
       </div>
 
-      {loading ? (
-        <p className="text-sm text-slate-500 font-mono">Loading tasks…</p>
-      ) : visible.length === 0 ? (
-        <p className="text-sm text-slate-500">No tasks in this view yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {visible.map((t) => (
-            <TaskCard key={t._id} task={t} onChange={handleChange} onDelete={handleDelete} onEdit={handleEdit} />
-          ))}
+      <div className="grid xl:grid-cols-[2fr_1fr] gap-5">
+        <div>
+          {loading ? (
+            <p className="text-sm text-slate-500 font-mono">Loading tasks…</p>
+          ) : visible.length === 0 ? (
+            <p className="text-sm text-slate-500">No tasks in this view yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {visible.map((t) => (
+                <TaskCard key={t._id} task={t} onChange={handleChange} onDelete={handleDelete} onEdit={handleEdit} />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+        <div className="space-y-5">
+          <AIStatusPanel title="Task planner pulse" description="AI context for your task focus, due dates, and urgency." />
+          <TaskSearchPanel />
+        </div>
+      </div>
 
       {showForm && (
         <TaskForm

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import GoalCard from "@/components/GoalCard";
+import AIStatusPanel from "@/components/AIStatusPanel";
 import api from "@/lib/api";
 
 export default function GoalsPage() {
@@ -63,17 +64,22 @@ export default function GoalsPage() {
         </button>
       </form>
 
-      {loading ? (
-        <p className="text-sm text-slate-500 font-mono">Loading…</p>
-      ) : goals.length === 0 ? (
-        <p className="text-sm text-slate-500">No goals yet. Add a long-range goal above.</p>
-      ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {goals.map((g) => (
-            <GoalCard key={g._id} goal={g} onChange={handleChange} onDelete={handleDelete} />
-          ))}
+      <div className="grid xl:grid-cols-[2fr_1fr] gap-5">
+        <div>
+          {loading ? (
+            <p className="text-sm text-slate-500 font-mono">Loading…</p>
+          ) : goals.length === 0 ? (
+            <p className="text-sm text-slate-500">No goals yet. Add a long-range goal above.</p>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {goals.map((g) => (
+                <GoalCard key={g._id} goal={g} onChange={handleChange} onDelete={handleDelete} />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+        <AIStatusPanel title="Goal planning coach" description="AI insights to help keep your long-range goals aligned with today’s priorities." />
+      </div>
     </Shell>
   );
 }

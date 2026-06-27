@@ -14,6 +14,10 @@ export default function IntegrationPanel() {
     try {
       const { data } = await api.get("/integrations");
       setIntegrations(data.integrations || []);
+      setMessage("");
+    } catch (error) {
+      console.error("Integration load failed", error);
+      setMessage("Unable to load integrations. Check your backend or network connection.");
     } finally {
       setLoading(false);
     }
@@ -27,27 +31,40 @@ export default function IntegrationPanel() {
       // If we already have a landing URL for this integration, open it directly
       const local = integrations.find((i) => i.type === type);
       if (local && local.landingUrl) {
-        // Special case: for VS Code offer choice between desktop app and browser
-        if (type === "vscode" && local.appProtocol && local.landingUrl) {
-          const openDesktop = window.confirm("Open in VS Code desktop app? OK = Desktop, Cancel = Browser");
-          if (openDesktop) {
+        // For native app protocols, ask first before opening external apps.
+        if (local.appProtocol && local.landingUrl) {
+          const promptMessage = type === "vscode"
+            ? `Open ${label} in VS Code desktop? Press OK for desktop or Cancel for browser.`
+            : `Open ${label} in the native app? Press Cancel to open the browser version instead.`;
+          const openNative = window.confirm(promptMessage);
+          if (openNative) {
             await tryOpenApp(local.appProtocol, local.landingUrl, 2000);
-            setMessage(`Attempted to open VS Code desktop app.`);
+            setMessage(`Attempted to open ${label} native app.`);
             return;
           }
-          // fallthrough: open in browser
           window.open(local.landingUrl, "_blank");
           setMessage(`${label} opened in browser.`);
           return;
         }
 
-        await tryOpenApp(local.appProtocol || null, local.landingUrl, 2000);
+        await tryOpenApp(null, local.landingUrl, 2000);
         setMessage(`${label} opened in a new tab.`);
         return;
       }
       const { data } = await api.post("/integrations/connect", { type, account: `${label} account` });
       if (data.landing && data.landingUrl) {
-        // Attempt intelligent app launch: try native app protocol first, fallback to web URL after 2s
+        if (data.appProtocol && data.landingUrl && type === "vscode") {
+          const openNative = window.confirm(`Open ${label} in VS Code desktop? Press OK for desktop or Cancel for browser.`);
+          if (openNative) {
+            await tryOpenApp(data.appProtocol, data.landingUrl, 2000);
+            setMessage(`Attempted to open ${label} native app.`);
+            return;
+          }
+          window.open(data.landingUrl, "_blank");
+          setMessage(`${label} opened in browser.`);
+          return;
+        }
+
         await tryOpenApp(data.appProtocol || null, data.landingUrl, 2000);
         // Do not change integration state — opening provider should not mark it connected.
         setMessage(`${label} opened in a new tab.`);

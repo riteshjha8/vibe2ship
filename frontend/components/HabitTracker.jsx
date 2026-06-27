@@ -12,12 +12,16 @@ export default function HabitTracker({ habit, onChange, onDelete }) {
   }
 
   return (
-    <div className="glass-card rounded-xl p-4 flex items-center justify-between gap-3">
-      <div>
-        <h4 className="font-display font-medium">{habit.title}</h4>
-        <p className="text-xs text-slate-400">
-          {habit.frequency === "daily" ? "Daily" : "Weekly"} · streak {habit.streak} · best {habit.longestStreak}
-        </p>
+    <div className="glass-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-3 bg-slate-950/80 border border-slate-700">
+      <div className="min-w-0">
+        <h4 className="font-display font-medium text-base text-slate-100">{habit.title}</h4>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-400">
+          <span className="rounded-full border border-slate-700 bg-slate-900/90 px-2 py-0.5 font-medium text-slate-100">
+            {habit.frequency === "daily" ? "Daily" : "Weekly"}
+          </span>
+          <span>streak {habit.streak}</span>
+          <span>best {habit.longestStreak}</span>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <button

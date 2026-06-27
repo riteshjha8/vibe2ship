@@ -12,13 +12,39 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("v2s_user") : null;
+    const storedUser = typeof window !== "undefined" ? localStorage.getItem("v2s_user") : null;
     const token = typeof window !== "undefined" ? localStorage.getItem("v2s_access") : null;
-    if (stored && token) {
-      setUser(JSON.parse(stored));
+
+    async function initializeAuth() {
+      if (storedUser && token) {
+        setUser(JSON.parse(storedUser));
+        setLoading(false);
+        return;
+      }
+
+      if (token) {
+        try {
+          const { data } = await api.get("/auth/me");
+          localStorage.setItem("v2s_user", JSON.stringify(data.user));
+          setUser(data.user);
+        } catch (err) {
+          console.warn("Stored access token exists but user recovery failed", err.response?.status || err.message);
+          localStorage.removeItem("v2s_user");
+          localStorage.removeItem("v2s_access");
+          localStorage.removeItem("v2s_refresh");
+          setUser(null);
+          if (typeof window !== "undefined") router.replace("/login");
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+
+    initializeAuth();
+  }, [router]);
 
   const persist = (userData, accessToken, refreshToken) => {
     localStorage.setItem("v2s_user", JSON.stringify(userData));

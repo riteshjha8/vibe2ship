@@ -26,7 +26,12 @@ export function SocketProvider({ children }) {
     import("socket.io-client")
       .then(({ io }) => {
         if (!mounted) return;
-        socket = io(API_URL, { auth: { token }, transports: ["websocket", "polling"] });
+        const socketHost = API_URL || (typeof window !== "undefined" ? window.location.origin : "");
+        socket = io(socketHost, {
+          auth: { token },
+          transports: ["websocket", "polling"],
+          path: "/socket.io",
+        });
         socketRef.current = socket;
 
         socket.on("task:reminder", (payload) => {
