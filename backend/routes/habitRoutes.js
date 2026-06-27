@@ -7,6 +7,7 @@ router.use(protect);
 router.post("/", ctrl.createHabit);
 router.get("/", ctrl.getHabits);
 router.post("/:id/checkin", ctrl.checkInHabit);
+router.post("/:id/checklist/:itemId/toggle", ctrl.toggleChecklistItem);
 router.delete("/:id", ctrl.deleteHabit);
 
 export default router;

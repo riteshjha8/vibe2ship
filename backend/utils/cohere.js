@@ -99,14 +99,15 @@ async function contextualReminderMessage({ title, timeLeftLabel, urgency }) {
   return result;
 }
 
-function buildContextSummary({ tasks = [], goals = [], habits = [] } = {}) {
+function buildContextSummary({ tasks = [], goals = [], habits = [], alerts = [], memories = [], summaries = [], preferences = {} } = {}) {
   const sections = [];
   if (tasks.length) {
     const lines = tasks.slice(0, 6).map((t) => {
       const due = t.deadline ? `due ${new Date(t.deadline).toLocaleDateString()}` : "no deadline";
-      const importance = t.importance ? `importance ${t.importance}/5` : "importance unknown";
+      const importance = typeof t.importance === "number" ? `importance ${t.importance}/5` : "importance unknown";
+      const effort = t.effortMinutes ? `~${t.effortMinutes} min` : "effort unknown";
       const location = t.location ? ` at ${t.location}` : "";
-      return `- ${t.title}${location} (${importance}, ${due})`;
+      return `- ${t.title}${location} (${importance}, ${due}, ${effort})`;
     });
     sections.push(`Open tasks:\n${lines.join("\n")}`);
   }
@@ -122,11 +123,35 @@ function buildContextSummary({ tasks = [], goals = [], habits = [] } = {}) {
     const lines = habits.slice(0, 4).map((h) => {
       const frequency = h.frequency || "daily";
       const streak = typeof h.streak === "number" ? `streak ${h.streak}` : "streak unknown";
-      return `- ${h.title} (${frequency}, ${streak})`;
+      const lastDone = h.lastCompletedAt ? `last completed ${new Date(h.lastCompletedAt).toLocaleDateString()}` : "not completed recently";
+      return `- ${h.title} (${frequency}, ${streak}, ${lastDone})`;
     });
     sections.push(`Habits:\n${lines.join("\n")}`);
   }
-  return sections.length ? sections.join("\n\n") : "No active tasks, goals, or habits were found in the user's current productivity data.";
+  if (alerts.length) {
+    const lines = alerts.slice(0, 5).map((a) => {
+      const time = a.alarmTime ? `${new Date(a.alarmTime).toLocaleString()}` : "time unknown";
+      return `- ${a.title} (at ${time})`;
+    });
+    sections.push(`Reminders and calendar alerts:\n${lines.join("\n")}`);
+  }
+  if (memories.length) {
+    const lines = memories.slice(0, 4).map((m) => `- ${m.title}: ${m.content.slice(0, 120).replace(/\s+/g, " ")}`);
+    sections.push(`Recent notes and memories:\n${lines.join("\n")}`);
+  }
+  if (summaries.length) {
+    const lines = summaries.slice(0, 2).map((s) => `- ${s.summary.slice(0, 120).replace(/\s+/g, " ")}`);
+    sections.push(`Recent chat summaries:\n${lines.join("\n")}`);
+  }
+  if (Object.keys(preferences).length) {
+    const prefLines = [];
+    if (preferences.timezone) prefLines.push(`timezone ${preferences.timezone}`);
+    if (preferences.country) prefLines.push(`country ${preferences.country}`);
+    if (preferences.notificationPrefs) prefLines.push(`notifications ${JSON.stringify(preferences.notificationPrefs)}`);
+    if (preferences.integrations) prefLines.push(`integrations ${Object.keys(preferences.integrations).join(", ") || "none"}`);
+    sections.push(`User preferences:\n- ${prefLines.join("; ")}`);
+  }
+  return sections.length ? sections.join("\n\n") : "No active productivity data was found in the user's current context.";
 }
 
 function simplifyVoiceTitle(transcript) {
@@ -175,6 +200,96 @@ async function suggestRescuePlan(tasks, userName, goals = [], habits = []) {
   const prompt = `You are an autonomous life rescue assistant for ${userName}. The user needs the fastest possible way to save their day. Here are their current open tasks:\n${taskList}${goalList ? `\n\nActive goals:\n${goalList}` : ""}${habitList ? `\n\nKey habits:\n${habitList}` : ""}\n\nProvide 4 direct, urgent action items in short bullet points. Focus on immediate next steps, deadline rescue, location-aware planning, and what to do first. If a task has a destination, remind the user they can open Google Maps for navigation. Keep it clear and practical with no extra fluff.`;
   const result = await askCohere(prompt);
   return result;
+}
+
+async function suggestHabitActions(userName, tasks = [], goals = [], habits = []) {
+  const taskList = tasks
+    .map((t) => {
+      const due = t.deadline ? `due ${new Date(t.deadline).toLocaleDateString()}` : "no deadline";
+      return `- "${t.title}" (${t.category || "task"}, importance ${t.importance || 3}/5, ${due})`;
+    })
+    .slice(0, 10)
+    .join("\n");
+  const goalList = goals
+    .map((g) => `- "${g.title}" (progress ${g.progress || 0}%, target ${g.targetDate ? new Date(g.targetDate).toLocaleDateString() : "unknown"})`)
+    .slice(0, 5)
+    .join("\n");
+  const habitList = habits
+    .map((h) => {
+      const streak = typeof h.streak === "number" ? `streak ${h.streak}` : "streak unknown";
+      const lastDone = h.lastCompletedAt ? `last done ${new Date(h.lastCompletedAt).toLocaleDateString()}` : "not recently completed";
+      return `- "${h.title}" (${h.frequency || "daily"}, ${streak}, ${lastDone})`;
+    })
+    .slice(0, 8)
+    .join("\n");
+
+  const prompt = `You are a smart habit coach for ${userName}. Based on the user's open tasks, active goals, and current habits, provide 5 to 8 habit-building suggestions the user can take action on today. For each suggestion, respond with JSON in this exact shape:
+[
+  {"id": "string", "title": "string", "description": "string", "relevantHabit": "string"}
+]
+Do not add any extra text outside the JSON array.
+
+Open tasks:\n${taskList || "- none"}${goalList ? `\n\nActive goals:\n${goalList}` : ""}${habitList ? `\n\nCurrent habits:\n${habitList}` : ""}
+
+Focus on energy, focus, burnout prevention, and creating easy wins that support daily routines and task completion probability.`;
+
+  const result = await askCohere(prompt, { jsonMode: true });
+  if (Array.isArray(result) && result.length) {
+    const normalized = result
+      .filter((item) => item && typeof item.title === "string" && item.title.trim())
+      .slice(0, 8)
+      .map((item, index) => ({
+        id: item.id || `suggestion-${index + 1}`,
+        title: item.title.trim(),
+        description: item.description?.trim() || "No details provided.",
+        relevantHabit: item.relevantHabit?.trim() || "General habit support",
+      }));
+    if (normalized.length) return normalized;
+  }
+
+  const fallback = [
+    {
+      id: "habit-suggestion-1",
+      title: "Add a 10-minute energy check-in",
+      description: "Each morning, write one quick note about your focus, energy, and the single most important task for the day.",
+      relevantHabit: "Energy awareness",
+    },
+    {
+      id: "habit-suggestion-2",
+      title: "Schedule a midday focus block",
+      description: "Block 25–30 minutes for your most important task to protect deep work time and reduce decision fatigue.",
+      relevantHabit: "Deep work",
+    },
+    {
+      id: "habit-suggestion-3",
+      title: "Plan a short recovery break",
+      description: "Every 90 minutes, take 5 minutes to stretch, hydrate, or step outside to avoid burnout build-up.",
+      relevantHabit: "Burnout prevention",
+    },
+    {
+      id: "habit-suggestion-4",
+      title: "Review your top task before finishing work",
+      description: "End your day by picking one task to start first tomorrow, so you keep momentum and improve completion probability.",
+      relevantHabit: "Task planning",
+    },
+    {
+      id: "habit-suggestion-5",
+      title: "Break a task into a quick checklist",
+      description: "If a task feels large, list 3 simple next actions to make progress without overwhelm.",
+      relevantHabit: "Task focus",
+    },
+  ]; 
+
+  if (habits.length < 3) {
+    fallback.push({
+      id: "habit-suggestion-6",
+      title: "Start a small daily habit",
+      description: "Commit to a tiny habit like 5 minutes of review or journaling to build consistency without pressure.",
+      relevantHabit: "Habit creation",
+    });
+  }
+
+  return fallback;
 }
 
 async function summarizeCareerFinance(tasks, userName, goals = [], habits = []) {
@@ -285,9 +400,19 @@ async function generateAssistantResponse(history, userName, sessionTitle, contex
     .map((message) => `${message.role === "user" ? "User" : message.role === "assistant" ? "Assistant" : "System"}: ${message.content}`)
     .join("\n");
   const contextText = buildContextSummary(context);
-  const prompt = `You are a proactive productivity and finance coach for ${userName}. This chat session is titled "${sessionTitle}".
+  const prompt = `You are LastMinute AI's intelligent productivity assistant for ${userName}. This is not a generic chatbot. Use only the authenticated user data provided here and do not hallucinate or invent facts.
 
-Use the user's current productivity data to personalize your reply. The assistant should give direct, action-oriented guidance, help prioritize tasks, advance goals, and keep the user focused on what matters most.
+You have visibility into the user's current tasks, goals, habits, reminders, calendar, productivity statistics, deadlines, previous conversations, and preferences. Analyze those items to provide highly personalized, actionable guidance.
+
+Always do the following when responding:
+- Calculate task priority using deadline, urgency, importance, estimated completion time, dependencies, workload, and user schedule.
+- Recommend the next best task to work on and explain why.
+- Suggest productive habits and recurring routines based on the user's routine.
+- Generate SMART goals when asked, and propose realistic next steps.
+- Detect scheduling conflicts, predict missed deadlines, and offer rescheduling or recovery advice.
+- Provide health-aware productivity advice such as hydration, breaks, posture, sleep, and stress management when relevant.
+- Be proactive: identify problems before they occur and recommend solutions without waiting to be asked.
+- Confirm before suggesting destructive actions such as deleting or overwriting data.
 
 Productivity context:
 ${contextText}
@@ -312,4 +437,4 @@ ${conversationText}`;
   return result;
 }
 
-export { askCohere, suggestDailySchedule, suggestRescuePlan, breakdownTask, contextualReminderMessage, parseVoiceCommand, summarizeCareerFinance, generateProductivityReport, semanticSearchTasks, generateAssistantResponse, summarizeConversation };
+export { askCohere, suggestDailySchedule, suggestRescuePlan, suggestHabitActions, breakdownTask, contextualReminderMessage, parseVoiceCommand, summarizeCareerFinance, generateProductivityReport, semanticSearchTasks, generateAssistantResponse, summarizeConversation };

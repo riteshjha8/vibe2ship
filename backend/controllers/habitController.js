@@ -10,9 +10,12 @@ function isYesterday(prev, now) {
 }
 
 async function createHabit(req, res) {
-  const { title, frequency } = req.body;
+  const { title, frequency, checklist } = req.body;
   if (!title) return res.status(400).json({ message: "Title is required" });
-  const habit = await Habit.create({ user: req.userId, title, frequency });
+  const normalizedChecklist = Array.isArray(checklist)
+    ? checklist.slice(0, 8).map((item) => ({ title: String(item).trim() || "Untitled step", done: false }))
+    : [];
+  const habit = await Habit.create({ user: req.userId, title, frequency, checklist: normalizedChecklist });
   res.status(201).json({ habit });
 }
 
@@ -42,10 +45,20 @@ async function checkInHabit(req, res) {
   res.json({ habit });
 }
 
+async function toggleChecklistItem(req, res) {
+  const habit = await Habit.findOne({ _id: req.params.id, user: req.userId });
+  if (!habit) return res.status(404).json({ message: "Habit not found" });
+  const item = habit.checklist.id(req.params.itemId);
+  if (!item) return res.status(404).json({ message: "Checklist item not found" });
+  item.done = !item.done;
+  await habit.save();
+  res.json({ habit });
+}
+
 async function deleteHabit(req, res) {
   const habit = await Habit.findOneAndDelete({ _id: req.params.id, user: req.userId });
   if (!habit) return res.status(404).json({ message: "Habit not found" });
   res.json({ message: "Habit deleted" });
 }
 
-export { createHabit, getHabits, checkInHabit, deleteHabit };
+export { createHabit, getHabits, checkInHabit, toggleChecklistItem, deleteHabit };

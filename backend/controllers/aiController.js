@@ -4,6 +4,7 @@ import Habit from "../models/Habit.js";
 import {
   suggestDailySchedule,
   suggestRescuePlan,
+  suggestHabitActions,
   parseVoiceCommand,
   summarizeCareerFinance,
   generateProductivityReport,
@@ -90,6 +91,20 @@ async function getRescuePlan(req, res) {
   res.json({ plan, fallback: false });
 }
 
+async function getHabitSuggestions(req, res) {
+  const user = await User.findById(req.userId);
+  const tasks = await Task.find({ user: req.userId, status: { $ne: "done" } }).sort({ deadline: 1 }).limit(12);
+  const goals = await Goal.find({ user: req.userId, status: "active" }).sort({ targetDate: 1 }).limit(10);
+  const habits = await Habit.find({ user: req.userId }).sort({ updatedAt: -1 }).limit(12);
+
+  const suggestions = await suggestHabitActions(user?.name || "there", tasks, goals, habits);
+  if (!Array.isArray(suggestions) || !suggestions.length) {
+    return res.json({ suggestions: [], fallback: true });
+  }
+
+  res.json({ suggestions, fallback: false });
+}
+
 async function getSummary(req, res) {
   const user = await User.findById(req.userId);
   const tasks = await Task.find({ user: req.userId });
@@ -105,6 +120,21 @@ async function getSummary(req, res) {
   const productivityScore = Math.max(15, Math.min(98, 100 - Math.round((overdue.length * 8 + dueToday.length * 4 + urgent.length * 3))));
   const deadlineRisk = Math.min(100, overdue.length * 20 + dueToday.length * 10 + urgent.length * 6);
   const burnoutRisk = Math.min(100, Math.round((pending.length / 10) * 30 + (overdue.length * 10)));
+  const totalHabitItems = habits.reduce((sum, habit) => sum + (Array.isArray(habit.checklist) ? habit.checklist.length : 0), 0);
+  const completedHabitItems = habits.reduce(
+    (sum, habit) => sum + (Array.isArray(habit.checklist) ? habit.checklist.filter((item) => item.done).length : 0),
+    0
+  );
+  const habitChecklistCompletion = totalHabitItems ? Math.round((completedHabitItems / totalHabitItems) * 100) : 0;
+  const totalGoalMilestones = goals.reduce((sum, goal) => sum + (Array.isArray(goal.milestones) ? goal.milestones.length : 0), 0);
+  const completedGoalMilestones = goals.reduce(
+    (sum, goal) => sum + (Array.isArray(goal.milestones) ? goal.milestones.filter((item) => item.done).length : 0),
+    0
+  );
+  const goalMilestoneCompletion = totalGoalMilestones ? Math.round((completedGoalMilestones / totalGoalMilestones) * 100) : Math.round(goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / Math.max(goals.length, 1));
+  const deepWorkScore = Math.max(10, Math.min(95, 100 - Math.round((pending.length * 4 + overdue.length * 5 + (habits.length ? 0 : 10)))));
+  const completionProbability = Math.max(15, Math.min(95, 100 - Math.round((overdue.length * 15 + dueToday.length * 8 + urgent.length * 5))));
+  const workLeft = pending.length + Math.max(0, totalHabitItems - completedHabitItems) + Math.max(0, totalGoalMilestones - completedGoalMilestones);
 
   res.json({
     summary: {
@@ -118,6 +148,15 @@ async function getSummary(req, res) {
       productivityScore,
       deadlineRisk,
       burnoutRisk,
+      deepWorkScore,
+      completionProbability,
+      habitChecklistCompletion,
+      totalHabitItems,
+      completedHabitItems,
+      goalMilestoneCompletion,
+      totalGoalMilestones,
+      completedGoalMilestones,
+      workLeft,
       currentMode: deadlineRisk > 40 ? "Rescue" : "Focused",
       planningHint: tasks.length
         ? `Next due task: ${tasks
@@ -166,4 +205,4 @@ async function searchKnowledgeGraph(req, res) {
   res.json({ query, results, message: results.length ? "" : "No matching items found yet." });
 }
 
-export { getRecommendations, handleVoiceCommand, getRescuePlan, getSummary, getCareerFinanceSummary, getProductivityReport, searchKnowledgeGraph, };
+export { getRecommendations, handleVoiceCommand, getRescuePlan, getHabitSuggestions, getSummary, getCareerFinanceSummary, getProductivityReport, searchKnowledgeGraph };

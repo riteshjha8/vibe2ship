@@ -9,6 +9,12 @@ const habitSchema = new mongoose.Schema(
     longestStreak: { type: Number, default: 0 },
     lastCompletedAt: { type: Date, default: null },
     history: [{ type: Date }],
+    checklist: [
+      {
+        title: { type: String, required: true, trim: true },
+        done: { type: Boolean, default: false },
+      },
+    ],
   },
   { timestamps: true }
 );

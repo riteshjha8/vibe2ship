@@ -1,82 +1,26 @@
 ﻿"use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/api";
-
-const STORAGE_KEY = "v2s_floating_ai_state";
-const ICON_SIZE = 72;
-const BOTTOM_OFFSET = 24;
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function loadSavedState() {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function saveState(state) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
 
 export default function FloatingAssistant() {
   const [isReady, setIsReady] = useState(false);
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [viewportWidth, setViewportWidth] = useState(0);
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [dragging, setDragging] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0, startLeft: 0, startTop: 0 });
-  const touchStartY = useRef(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = loadSavedState();
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const defaultX = width - ICON_SIZE - BOTTOM_OFFSET;
-    const defaultY = height - ICON_SIZE - BOTTOM_OFFSET;
-    const initial = {
-      x: saved?.x ?? defaultX,
-      y: saved?.y ?? defaultY,
-      open: saved?.open ?? false,
-    };
-    setPosition({
-      x: clamp(initial.x, 12, width - ICON_SIZE - 12),
-      y: clamp(initial.y, 12, height - ICON_SIZE - 12),
-    });
-    setOpen(initial.open);
-    setViewportWidth(width);
+    setViewportWidth(window.innerWidth);
     setIsReady(true);
   }, []);
 
   useEffect(() => {
-    if (!isReady) return;
-    saveState({ ...position, open });
-  }, [position, open, isReady]);
-
-  useEffect(() => {
     if (typeof window === "undefined") return;
-    const handleResize = () => {
-      setViewportWidth(window.innerWidth);
-      setPosition((prev) => ({
-        x: clamp(prev.x, 12, window.innerWidth - ICON_SIZE - 12),
-        y: clamp(prev.y, 12, window.innerHeight - ICON_SIZE - 12),
-      }));
-    };
+    const handleResize = () => setViewportWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -118,52 +62,6 @@ export default function FloatingAssistant() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const startDrag = (event) => {
-    if (event.type === "mousedown" && event.button !== 0) return;
-    event.preventDefault();
-    const pageX = event.type === "touchstart" ? event.touches[0].pageX : event.pageX;
-    const pageY = event.type === "touchstart" ? event.touches[0].pageY : event.pageY;
-    dragRef.current = { startX: pageX, startY: pageY, startLeft: position.x, startTop: position.y };
-    setDragging(true);
-  };
-
-  useEffect(() => {
-    if (!dragging) return;
-    const move = (event) => {
-      const pageX = event.type.startsWith("touch") ? event.touches[0].pageX : event.pageX;
-      const pageY = event.type.startsWith("touch") ? event.touches[0].pageY : event.pageY;
-      const deltaX = pageX - dragRef.current.startX;
-      const deltaY = pageY - dragRef.current.startY;
-      setPosition((prev) => ({
-        x: clamp(dragRef.current.startLeft + deltaX, 12, window.innerWidth - ICON_SIZE - 12),
-        y: clamp(dragRef.current.startTop + deltaY, 12, window.innerHeight - ICON_SIZE - 12),
-      }));
-    };
-    const end = () => setDragging(false);
-    window.addEventListener("mousemove", move);
-    window.addEventListener("touchmove", move, { passive: false });
-    window.addEventListener("mouseup", end);
-    window.addEventListener("touchend", end);
-    return () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("touchmove", move);
-      window.removeEventListener("mouseup", end);
-      window.removeEventListener("touchend", end);
-    };
-  }, [dragging]);
-
-  const handleTouchStart = (e) => {
-    touchStartY.current = e.touches?.[0]?.clientY || null;
-  };
-
-  const handleTouchEnd = (e) => {
-    const endY = e.changedTouches?.[0]?.clientY;
-    if (touchStartY.current && endY && endY - touchStartY.current > 80) {
-      setOpen(false);
-    }
-    touchStartY.current = null;
-  };
-
   async function sendMessage(event) {
     event.preventDefault();
     const trimmed = input.trim();
@@ -201,28 +99,15 @@ export default function FloatingAssistant() {
 
   return (
     <>
-      <div
-        className={`fixed z-40 ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
-        style={{ left: position.x, top: position.y, width: ICON_SIZE, height: ICON_SIZE }}
-        onMouseDown={startDrag}
-        onTouchStart={startDrag}
-        role="button"
-        aria-label="Open AI assistant"
-      >
-        {!open && (
-          <div className="relative h-full w-full rounded-full bg-slate-900/90 shadow-md flex items-center justify-center">
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                setOpen(true);
-              }}
-              className="h-14 w-14 rounded-full bg-teal-500 text-white font-semibold shadow-sm flex items-center justify-center"
-              aria-label="Open AI assistant"
-            >
-              AI
-            </button>
-          </div>
-        )}
+      <div className="fixed right-6 bottom-6 z-40">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white font-semibold shadow-lg shadow-teal-500/25 transition hover:bg-teal-400"
+          aria-label="Open AI assistant"
+        >
+          AI
+        </button>
       </div>
 
       {open && (

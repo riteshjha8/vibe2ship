@@ -7,6 +7,7 @@ router.use(protect);
 router.post("/", ctrl.createGoal);
 router.get("/", ctrl.getGoals);
 router.put("/:id", ctrl.updateGoal);
+router.post("/:id/milestones/:itemId/toggle", ctrl.toggleMilestone);
 router.delete("/:id", ctrl.deleteGoal);
 
 export default router;

@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import ChatSession from "../models/ChatSession.js";
 import Message from "../models/Message.js";
 import Memory from "../models/Memory.js";
+import Alert from "../models/Alert.js";
 import AIInsight from "../models/AIInsight.js";
 import ConversationSummary from "../models/ConversationSummary.js";
 import Task from "../models/Task.js";
@@ -57,8 +58,26 @@ async function postChatMessage(req, res) {
     const tasks = await Task.find({ user: req.userId, status: { $ne: "done" } }).sort({ deadline: 1 }).limit(40);
     const goals = await Goal.find({ user: req.userId, status: "active" }).sort({ targetDate: 1 }).limit(10);
     const habits = await Habit.find({ user: req.userId }).sort({ updatedAt: -1 }).limit(10);
+    const alerts = await Alert.find({ user: req.userId, active: true }).sort({ alarmTime: 1 }).limit(10);
+    const memories = await Memory.find({ user: req.userId }).sort({ updatedAt: -1 }).limit(6);
+    const summaries = await ConversationSummary.find({ user: req.userId }).sort({ updatedAt: -1 }).limit(2);
+    const preferences = {
+      timezone: user?.timezone || "Asia/Kolkata",
+      country: user?.country || "IN",
+      notificationPrefs: user?.notificationPrefs || {},
+      integrations: user?.integrations || {},
+    };
+
     assistantContent =
-      (await generateAssistantResponse(history, user?.name || "there", session.title, { tasks, goals, habits })) ||
+      (await generateAssistantResponse(history, user?.name || "there", session.title, {
+        tasks,
+        goals,
+        habits,
+        alerts,
+        memories,
+        summaries,
+        preferences,
+      })) ||
       "I couldn't generate a reply right now. Try again in a moment.";
 
     const assistantMsg = await Message.create({
