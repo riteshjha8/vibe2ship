@@ -23,9 +23,18 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
-    if (error.response?.status === 401 && !original._retry && typeof window !== "undefined") {
+    if (!original || typeof window === "undefined") return Promise.reject(error);
+
+    if (error.response?.status === 401 && !original._retry) {
       const refreshToken = localStorage.getItem("v2s_refresh");
-      if (!refreshToken) return Promise.reject(error);
+      if (!refreshToken) {
+        if (!original.skipAuthRedirect) {
+          localStorage.removeItem("v2s_access");
+          localStorage.removeItem("v2s_refresh");
+          localStorage.removeItem("v2s_user");
+        }
+        return Promise.reject(error);
+      }
 
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -40,17 +49,18 @@ api.interceptors.response.use(
         const { data } = await axios.post(refreshUrl, { refreshToken });
         localStorage.setItem("v2s_access", data.accessToken);
         queue.forEach(({ resolve, original: o }) => {
+          o.headers = o.headers || {};
           o.headers.Authorization = `Bearer ${data.accessToken}`;
           resolve(api(o));
         });
         queue = [];
+        original.headers = original.headers || {};
         original.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(original);
       } catch (err) {
         localStorage.removeItem("v2s_access");
         localStorage.removeItem("v2s_refresh");
         localStorage.removeItem("v2s_user");
-        if (typeof window !== "undefined") window.location.href = "/login";
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

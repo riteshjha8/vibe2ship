@@ -32,7 +32,7 @@ export default function CalendarView() {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement("a");
       a.href = url;
-      a.download = "vibe2ship-tasks.ics";
+      a.download = "finalping-ai-tasks.ics";
       document.body.appendChild(a);
       a.click();
       a.remove();

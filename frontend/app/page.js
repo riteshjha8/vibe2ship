@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import CountdownRing from "@/components/CountdownRing";
+import Logo from "@/components/Logo";
 
 const FEATURE_SECTIONS = [
   {
@@ -50,13 +51,13 @@ const FEATURE_SECTIONS = [
     ],
   },
   {
-    title: "Student & Developer Tools",
+    title: "Student, Professional & Entrepreneur Tools",
     items: [
-      "Assignment planner and exam preparation roadmap",
-      "Flashcard and quiz generator for fast study",
-      "Research paper summarizer and citation helper",
-      "GitHub integration, AI code review, bug prediction, and PR summaries",
-      "README, docs, and developer onboarding content generation",
+      "Assignment planner, exam prep, and interview readiness tools",
+      "Mock interview assistant and job/internship tracker",
+      "Bill payment reminders, expense tracking, and cashflow planning",
+      "Client follow-ups, proposal deadlines, and business task pipelines",
+      "Research paper summarizer, citation helper, and productivity workflows",
     ],
   },
   {
@@ -116,13 +117,7 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen">
       <header className="flex items-center justify-between px-6 sm:px-10 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-8 w-8 items-center justify-center">
-            <span className="absolute inset-0 rounded-full border-2 border-teal-400/70" />
-            <span className="text-teal-400 text-[10px] font-bold">V2S</span>
-          </span>
-          <span className="font-display font-semibold">Vibe<span className="text-teal-400">2</span>Ship</span>
-        </div>
+        <Logo />
         <div className="flex items-center gap-3 text-sm">
           <Link href="/login" className="text-slate-300 hover:text-white transition">Sign in</Link>
           <Link href="/register" className="bg-teal-500 hover:bg-teal-400 text-ink px-4 py-2 rounded-lg font-medium transition">
@@ -140,7 +135,7 @@ export default function LandingPage() {
             Neither should your <span className="text-teal-400">reminders</span>.
           </h1>
           <p className="text-slate-400 text-base sm:text-lg max-w-md mb-8">
-            An AI productivity companion that prioritizes your work, plans your day, and rings — out loud — at 24 hours, 1 hour, and 20 minutes before anything is due. Built to work the same whether you're in Kathmandu, Mumbai, or New York.
+            Students, professionals, and entrepreneurs stay on top of assignments, deadlines, bill payments, interviews, and every important commitment. An AI productivity companion that prioritizes your work, plans your day, and rings — out loud — at 24 hours, 1 hour, and 20 minutes before anything is due.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/register" className="bg-teal-500 hover:bg-teal-400 text-ink px-6 py-3 rounded-lg font-medium transition">
@@ -189,7 +184,7 @@ export default function LandingPage() {
             <h2 className="font-display text-2xl font-semibold">Everything in one companion</h2>
             <p className="text-slate-400 max-w-xl mt-2">Built as an autonomous AI operating system for last-minute deadlines, student life, developer productivity, and daily routines.</p>
           </div>
-          <Link href="/dashboard" className="rounded-full bg-teal-500 px-5 py-2.5 text-sm text-ink font-medium hover:bg-teal-400 transition">
+          <Link href="/login" className="rounded-full bg-teal-500 px-5 py-2.5 text-sm text-ink font-medium hover:bg-teal-400 transition">
             Open your AI dashboard
           </Link>
         </div>
@@ -211,7 +206,13 @@ export default function LandingPage() {
       </section>
 
       <footer className="px-6 sm:px-10 max-w-7xl mx-auto py-10 border-t border-white/8 text-xs text-slate-500">
-        Vibe2Ship — built for Vibe2Ship: The Last-Minute Life Saver.
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between sm:items-center">
+          <div className="flex items-center gap-3 text-slate-400">
+            <Logo withText={false} />
+            <span className="font-semibold text-slate-200">FinalPing AI</span>
+          </div>
+          <span>FinalPing AI — built for FinalPing AI: The Last-Minute Life Saver.</span>
+        </div>
       </footer>
     </main>
   );

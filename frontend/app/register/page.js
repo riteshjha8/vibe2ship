@@ -33,7 +33,7 @@ export default function RegisterPage() {
     <main className="min-h-screen flex items-center justify-center p-6">
       <form onSubmit={submit} className="glass-card rounded-2xl w-full max-w-sm p-8 space-y-4">
         <Link href="/" className="font-display font-semibold text-lg block mb-2">
-          Vibe<span className="text-teal-400">2</span>Ship
+          FinalPing <span className="text-teal-400">AI</span>
         </Link>
         <h1 className="font-display text-xl font-semibold">Create your account</h1>
         {error && <p className="text-sm text-alarm-500">{error}</p>}

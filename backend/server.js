@@ -23,6 +23,7 @@ import aiRoutes from "./routes/aiRoutes.js";
 import integrationRoutes from "./routes/integrationRoutes.js";
 import calendarRoutes from "./routes/calendarRoutes.js";
 import alertRoutes from "./routes/alertRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
 
 console.log("routes loaded");
@@ -58,6 +59,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/habits", habitRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/integrations", integrationRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/alerts", alertRoutes);

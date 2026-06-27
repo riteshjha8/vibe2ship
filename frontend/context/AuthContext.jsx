@@ -9,6 +9,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -33,7 +34,6 @@ export function AuthProvider({ children }) {
           localStorage.removeItem("v2s_access");
           localStorage.removeItem("v2s_refresh");
           setUser(null);
-          if (typeof window !== "undefined") router.replace("/login");
         } finally {
           setLoading(false);
         }
@@ -68,14 +68,16 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     const refreshToken = localStorage.getItem("v2s_refresh");
+    setLoggingOut(true);
     try {
-      await api.post("/auth/logout", { refreshToken });
+      await api.post("/auth/logout", { refreshToken }, { skipAuthRedirect: true });
     } catch {}
     localStorage.removeItem("v2s_user");
     localStorage.removeItem("v2s_access");
     localStorage.removeItem("v2s_refresh");
     setUser(null);
-    router.push("/login");
+    await router.replace("/");
+    setLoggingOut(false);
   }, [router]);
 
   const updateUser = useCallback((partial) => {
@@ -87,7 +89,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, loggingOut, register, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

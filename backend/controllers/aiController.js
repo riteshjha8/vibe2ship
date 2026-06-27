@@ -1,10 +1,14 @@
 import Task from "../models/Task.js";
-import { suggestDailySchedule,
+import Goal from "../models/Goal.js";
+import Habit from "../models/Habit.js";
+import {
+  suggestDailySchedule,
   suggestRescuePlan,
   parseVoiceCommand,
   summarizeCareerFinance,
   generateProductivityReport,
-  semanticSearchTasks, } from "../utils/cohere.js";
+  semanticSearchTasks,
+} from "../utils/cohere.js";
 import { localToUTC, parseDeadlineHint } from "../utils/timezone.js";
 import User from "../models/User.js";
 
@@ -12,14 +16,15 @@ import User from "../models/User.js";
 async function getRecommendations(req, res) {
   const user = await User.findById(req.userId);
   const tasks = await Task.find({ user: req.userId, status: { $ne: "done" } }).sort({ deadline: 1 }).limit(15);
+  const goals = await Goal.find({ user: req.userId, status: "active" }).sort({ targetDate: 1 }).limit(10);
+  const habits = await Habit.find({ user: req.userId }).sort({ updatedAt: -1 }).limit(10);
 
-  if (tasks.length === 0) {
-    return res.json({ recommendation: "No open tasks. Add one to get a personalized plan for your day." });
+  if (tasks.length === 0 && goals.length === 0 && habits.length === 0) {
+    return res.json({ recommendation: "No productivity data found. Start by adding a task, goal, or habit so the assistant can give you a smart plan." });
   }
 
-  const recommendation = await suggestDailySchedule(tasks, user?.name || "there");
+  const recommendation = await suggestDailySchedule(tasks, user?.name || "there", goals, habits);
   if (!recommendation) {
-    // Rule-based fallback if no Cohere key / call failed
     const top3 = tasks.slice(0, 3).map((t) => `- ${t.title} (due ${new Date(t.deadline).toLocaleString()})`);
     return res.json({
       recommendation: `AI scheduling is unavailable right now. Based on deadlines alone, focus on:\n${top3.join("\n")}`,
@@ -64,11 +69,14 @@ async function handleVoiceCommand(req, res) {
 async function getRescuePlan(req, res) {
   const user = await User.findById(req.userId);
   const tasks = await Task.find({ user: req.userId, status: { $ne: "done" } }).sort({ deadline: 1 }).limit(25);
+  const goals = await Goal.find({ user: req.userId, status: "active" }).sort({ targetDate: 1 }).limit(10);
+  const habits = await Habit.find({ user: req.userId }).sort({ updatedAt: -1 }).limit(10);
+
   if (tasks.length === 0) {
     return res.json({ plan: "No open tasks yet — add one and the AI will help you rescue your day.", fallback: true });
   }
 
-  const plan = await suggestRescuePlan(tasks, user?.name || "there");
+  const plan = await suggestRescuePlan(tasks, user?.name || "there", goals, habits);
   if (!plan) {
     return res.json({
       plan: `AI rescue mode is unavailable right now. Based on your deadlines, focus immediately on: ${tasks
@@ -85,6 +93,8 @@ async function getRescuePlan(req, res) {
 async function getSummary(req, res) {
   const user = await User.findById(req.userId);
   const tasks = await Task.find({ user: req.userId });
+  const goals = await Goal.find({ user: req.userId, status: "active" });
+  const habits = await Habit.find({ user: req.userId });
   const pending = tasks.filter((t) => t.status !== "done");
   const overdue = pending.filter((t) => new Date(t.deadline).getTime() < Date.now());
   const dueToday = pending.filter((t) => new Date(t.deadline).toDateString() === new Date().toDateString());
@@ -103,10 +113,17 @@ async function getSummary(req, res) {
       overdue: overdue.length,
       dueToday: dueToday.length,
       urgentNow: urgent.length,
+      activeGoals: goals.length,
+      currentHabits: habits.length,
       productivityScore,
       deadlineRisk,
       burnoutRisk,
       currentMode: deadlineRisk > 40 ? "Rescue" : "Focused",
+      planningHint: tasks.length
+        ? `Next due task: ${tasks
+            .filter((t) => t.status !== "done")
+            .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0]?.title || "none"}`
+        : "No tasks found",
     },
   });
 }
@@ -114,7 +131,9 @@ async function getSummary(req, res) {
 async function getCareerFinanceSummary(req, res) {
   const user = await User.findById(req.userId);
   const tasks = await Task.find({ user: req.userId });
-  const summary = await summarizeCareerFinance(tasks, user?.name || "there");
+  const goals = await Goal.find({ user: req.userId });
+  const habits = await Habit.find({ user: req.userId });
+  const summary = await summarizeCareerFinance(tasks, user?.name || "there", goals, habits);
   res.json({
     summary:
       summary ||
@@ -125,7 +144,9 @@ async function getCareerFinanceSummary(req, res) {
 async function getProductivityReport(req, res) {
   const user = await User.findById(req.userId);
   const tasks = await Task.find({ user: req.userId });
-  const report = await generateProductivityReport(tasks, user?.name || "there");
+  const goals = await Goal.find({ user: req.userId });
+  const habits = await Habit.find({ user: req.userId });
+  const report = await generateProductivityReport(tasks, user?.name || "there", goals, habits);
   res.json({
     report:
       report ||
@@ -139,7 +160,9 @@ async function searchKnowledgeGraph(req, res) {
     return res.status(400).json({ results: [], message: "Search query is required." });
   }
   const tasks = await Task.find({ user: req.userId });
-  const results = await semanticSearchTasks(tasks, query);
+  const goals = await Goal.find({ user: req.userId });
+  const habits = await Habit.find({ user: req.userId });
+  const results = await semanticSearchTasks(tasks, goals, habits, query);
   res.json({ query, results, message: results.length ? "" : "No matching items found yet." });
 }
 

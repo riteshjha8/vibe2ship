@@ -4,7 +4,7 @@ import { SocketProvider } from "@/context/SocketContext";
 import ReminderOverlay from "@/components/ReminderOverlay";
 
 export const metadata = {
-  title: "Vibe2Ship | The Last-Minute Life Saver",
+  title: "FinalPing AI | The Last-Minute Life Saver",
   description: "An AI productivity companion that plans, prioritizes, and rings the alarm before you miss a deadline.",
 };
 

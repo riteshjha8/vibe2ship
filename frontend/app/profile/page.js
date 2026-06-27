@@ -19,7 +19,7 @@ const TIMEZONES = [
 ];
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [timezone, setTimezone] = useState(user?.timezone || detectTimezone());
   const [emailOn, setEmailOn] = useState(user?.notificationPrefs?.email ?? true);
@@ -40,52 +40,104 @@ export default function ProfilePage() {
 
   return (
     <Shell>
-      <h1 className="font-display text-2xl font-semibold mb-6">Profile</h1>
-      <form onSubmit={save} className="glass-card rounded-xl p-6 max-w-lg space-y-4">
-        <div>
-          <label className="block text-xs text-slate-400 mb-1">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-slate-400 mb-1">Email</label>
-          <input
-            disabled
-            value={user?.email}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-slate-500"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Timezone <span className="text-slate-500">(used for every deadline & reminder)</span>
-          </label>
-          <select
-            value={timezone}
-            onChange={(e) => setTimezone(e.target.value)}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
-          >
-            {TIMEZONES.map((tz) => (
-              <option key={tz} value={tz}>{tz}</option>
-            ))}
-          </select>
+      <div className="space-y-6">
+        <div className="max-w-4xl">
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold">Profile</h1>
+          <p className="mt-3 max-w-2xl text-sm text-slate-400">
+            Manage your account, timezone, notification preferences, and security actions for FinalPing AI.
+          </p>
         </div>
 
-        <div className="flex items-center justify-between border-t border-white/8 pt-4">
-          <span className="text-sm">Email reminders</span>
-          <input type="checkbox" checked={emailOn} onChange={(e) => setEmailOn(e.target.checked)} className="accent-teal-500 h-4 w-4" />
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm">Voice ring alerts</span>
-          <input type="checkbox" checked={voiceOn} onChange={(e) => setVoiceOn(e.target.checked)} className="accent-teal-500 h-4 w-4" />
-        </div>
+        <form onSubmit={save} className="glass-card rounded-3xl p-8 shadow-2xl shadow-slate-950/30 max-w-4xl space-y-8">
+          <div className="grid gap-6 lg:grid-cols-[1.4fr_0.95fr]">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 mb-2">Name</label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 outline-none"
+                />
+              </div>
 
-        <button className="w-full rounded-lg bg-teal-500 hover:bg-teal-400 text-ink font-medium py-2.5 transition">
-          {saved ? "Saved ✓" : "Save changes"}
-        </button>
-      </form>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 mb-2">Email</label>
+                <input
+                  disabled
+                  value={user?.email}
+                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 mb-2">
+                  Timezone
+                </label>
+                <p className="text-xs text-slate-500 mb-2">This timezone is used for every deadline, reminder, and alert.</p>
+                <select
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 outline-none"
+                >
+                  {TIMEZONES.map((tz) => (
+                    <option key={tz} value={tz} className="bg-slate-950 text-slate-100">
+                      {tz}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6">
+              <h2 className="font-semibold text-xl text-slate-100 mb-4">Account summary</h2>
+              <dl className="space-y-4 text-sm text-slate-400">
+                <div>
+                  <dt className="font-medium text-slate-200">Registered email</dt>
+                  <dd className="mt-1 text-slate-400 break-all">{user?.email}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-slate-200">Current timezone</dt>
+                  <dd className="mt-1 text-slate-400">{timezone}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-slate-200">Alert settings</dt>
+                  <dd className="mt-1 text-slate-400">Email reminders and voice ring alerts keep you on track.</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-100">Email reminders</p>
+                <p className="text-sm text-slate-500">Receive timely reminder emails for all upcoming deadlines.</p>
+              </div>
+              <input type="checkbox" checked={emailOn} onChange={(e) => setEmailOn(e.target.checked)} className="accent-teal-500 h-5 w-5" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-100">Voice ring alerts</p>
+                <p className="text-sm text-slate-500">Enable audible voice alerts at the final countdown stages.</p>
+              </div>
+              <input type="checkbox" checked={voiceOn} onChange={(e) => setVoiceOn(e.target.checked)} className="accent-teal-500 h-5 w-5" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              onClick={logout}
+              className="w-full sm:w-auto rounded-3xl border border-red-500 text-red-400 hover:bg-red-500/10 px-4 py-3 font-semibold transition"
+            >
+              Sign out
+            </button>
+            <button className="w-full sm:w-auto rounded-3xl bg-teal-500 hover:bg-teal-400 text-ink font-semibold px-6 py-3 transition">
+              {saved ? "Saved ✓" : "Save changes"}
+            </button>
+          </div>
+        </form>
+      </div>
     </Shell>
   );
 }
