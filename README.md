@@ -1,6 +1,6 @@
 # FINALPING
 
-> 🔥 FINALPING is a high-impact AI productivity platform built to impress hackathon judges.
+> 🔥 FINALPING --- AI
 
 FINALPING combines intelligent task planning, smart reminders, AI assistance, voice workflows, calendar scheduling, and real-time alerts in a polished product.
 
@@ -55,7 +55,7 @@ FINALPING solves productivity overload with:
 
 ---
 
-## 🧠 Why FINALPING Is Hackathon-Ready
+## 🧠 Why FINALPING ?
 
 FINALPING is designed for presentation impact:
 
@@ -95,12 +95,7 @@ npm install
 npm run dev
 ```
 
-Then open:
 
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:5000`
-
----
 
 ## 🧩 Root Helper Scripts
 
@@ -112,35 +107,11 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
----
 
-## ☁️ Deployment Guide
 
-- Deploy `backend/` to Railway, Render, Heroku, or similar
-- Deploy `frontend/` to Vercel, Netlify, or any Next.js-compatible host
-- If frontend and backend are separate, set `NEXT_PUBLIC_API_URL`
-- Configure backend CORS to allow the frontend origin
 
----
 
-## 🔐 Environment Variables
 
-### Backend (`backend/.env`)
-
-```bash
-PORT=5000
-MONGO_URI=<your-mongodb-connection-string>
-CLIENT_URL=http://localhost:3000
-JWT_SECRET=<your-jwt-secret>
-EMAIL_HOST=<smtp-host>
-EMAIL_PORT=<smtp-port>
-EMAIL_USER=<smtp-user>
-EMAIL_PASS=<smtp-pass>
-SMS_API_KEY=<sms-api-key>
-COHERE_API_KEY=<cohere-api-key>
-```
-
-### Frontend (`frontend/.env.local`)
 
 ```bash
 NEXT_PUBLIC_API_URL=https://your-backend-host.com
