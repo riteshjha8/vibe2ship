@@ -8,6 +8,7 @@ import api from "@/lib/api";
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
   const [form, setForm] = useState({ title: "", targetDate: "", milestonesText: "" });
+  
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -31,6 +32,7 @@ export default function GoalsPage() {
       .slice(0, 10);
     const { data } = await api.post("/goals", { title: form.title, targetDate: form.targetDate, milestones });
     setGoals((prev) => [data.goal, ...prev]);
+
     setForm({ title: "", targetDate: "", milestonesText: "" });
     window.dispatchEvent(new Event("aiSummaryRefresh"));
   }
@@ -58,7 +60,7 @@ export default function GoalsPage() {
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder="Ship the MVP"
-                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
+                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold-400 outline-none"
               />
             </div>
             <div>
@@ -67,7 +69,7 @@ export default function GoalsPage() {
                 type="date"
                 value={form.targetDate}
                 onChange={(e) => setForm((f) => ({ ...f, targetDate: e.target.value }))}
-                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-teal-400 outline-none"
+                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-gold-400 outline-none"
               />
             </div>
           </div>
@@ -80,11 +82,12 @@ export default function GoalsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, milestonesText: e.target.value }))}
                 placeholder="Add 5–10 milestones, one per line"
                 rows={4}
-                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
+                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold-400 outline-none"
               />
               <p className="mt-2 text-xs text-slate-500">Milestones help the AI estimate progress and keep your goal actionable.</p>
             </div>
-            <button className="inline-flex items-center justify-center rounded-2xl bg-teal-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-400">
+            {/* Assignment upload removed from Goals page per UX change; moved to Meetings page */}
+            <button className="inline-flex items-center justify-center rounded-2xl bg-gold-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-gold-400">
               Add goal
             </button>
           </div>
@@ -105,7 +108,9 @@ export default function GoalsPage() {
             </div>
           )}
         </div>
-        <AIStatusPanel title="Goal planning coach" description="AI insights to help keep your long-range goals aligned with today’s priorities." />
+        <div className="space-y-4">
+          <AIStatusPanel title="Goal planning coach" description="AI insights to help keep your long-range goals aligned with today’s priorities." />
+        </div>
       </div>
     </Shell>
   );

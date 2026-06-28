@@ -31,7 +31,7 @@ export default function AIRecommendations() {
     <div className="glass-card rounded-xl p-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
         <div>
-          <h3 className="font-display font-semibold text-sm tracking-wide text-teal-300">
+          <h3 className="font-display font-semibold text-sm tracking-wide text-gold-300">
             {mode === "rescue" ? "Emergency rescue mode" : "AI mission control"}
           </h3>
           <p className="text-[11px] text-slate-500 max-w-xl mt-1">
@@ -43,7 +43,7 @@ export default function AIRecommendations() {
             type="button"
             onClick={() => load("recommendation")}
             className={`text-xs px-3 py-2 rounded-full transition ${
-              mode === "recommendation" ? "bg-teal-500 text-ink" : "border border-white/10 text-slate-300 hover:bg-white/5"
+              mode === "recommendation" ? "bg-gold-500 text-ink" : "border border-white/10 text-slate-300 hover:bg-white/5"
             }`}
           >
             Daily mission

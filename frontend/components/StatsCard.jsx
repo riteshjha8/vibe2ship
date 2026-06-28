@@ -1,4 +1,4 @@
-export default function StatsCard({ label, value, accent = "#2DD4BF" }) {
+export default function StatsCard({ label, value, accent = "#C9982A" }) {
   return (
     <div className="glass-card rounded-xl p-4">
       <p className="text-xs text-slate-400 mb-1">{label}</p>

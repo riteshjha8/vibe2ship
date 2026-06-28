@@ -7,19 +7,6 @@ function normalizeType(type) {
 }
 
 const OAUTH_CONFIG = {
-  gmail: {
-    label: "Gmail",
-    authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-    tokenUrl: "https://oauth2.googleapis.com/token",
-    scope: ["openid", "profile", "email", "https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/calendar.events"].join(" "),
-    authorizeParams: { access_type: "offline", prompt: "consent" },
-  },
-  outlook: {
-    label: "Outlook",
-    authorizeUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-    tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-    scope: ["openid", "offline_access", "profile", "email", "https://graph.microsoft.com/Mail.Read", "https://graph.microsoft.com/Calendars.ReadWrite"].join(" "),
-  },
   github: {
     label: "GitHub",
     authorizeUrl: "https://github.com/login/oauth/authorize",
@@ -32,6 +19,19 @@ const OAUTH_CONFIG = {
     tokenUrl: "https://graph.facebook.com/v16.0/oauth/access_token",
     scope: ["whatsapp_business_management", "whatsapp_business_messaging", "email"].join(" "),
   },
+  "google-classroom": {
+    label: "Google Classroom",
+    authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+    tokenUrl: "https://oauth2.googleapis.com/token",
+    scope: [
+      "https://www.googleapis.com/auth/classroom.coursework.me",
+      "https://www.googleapis.com/auth/classroom.coursework.students",
+      "https://www.googleapis.com/auth/drive.file",
+      "email",
+      "profile",
+    ].join(" "),
+    authorizeParams: { access_type: "offline", include_granted_scopes: "true", prompt: "consent" },
+  },
 };
 
 function buildRedirectUrl(req, type) {
@@ -39,7 +39,7 @@ function buildRedirectUrl(req, type) {
   if (!provider) return null;
   const redirectUri = `${process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`}/api/integrations/oauth/callback`;
   const params = {
-    client_id: process.env[`OAUTH_${type.toUpperCase()}_CLIENT_ID`],
+    client_id: process.env[`OAUTH_${type.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_CLIENT_ID`],
     redirect_uri: redirectUri,
     response_type: "code",
     scope: provider.scope,
@@ -75,8 +75,8 @@ async function exchangeCode(code, type, redirectUri) {
   if (!provider) throw new Error("Unsupported OAuth provider.");
 
   const tokenParams = {
-    client_id: process.env[`OAUTH_${type.toUpperCase()}_CLIENT_ID`],
-    client_secret: process.env[`OAUTH_${type.toUpperCase()}_CLIENT_SECRET`],
+    client_id: process.env[`OAUTH_${type.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_CLIENT_ID`],
+    client_secret: process.env[`OAUTH_${type.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_CLIENT_SECRET`],
     code,
     redirect_uri: redirectUri,
     grant_type: "authorization_code",

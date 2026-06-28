@@ -8,6 +8,7 @@ import {
   parseVoiceCommand,
   summarizeCareerFinance,
   generateProductivityReport,
+  generateWeeklyReview,
   semanticSearchTasks,
 } from "../utils/cohere.js";
 import { localToUTC, parseDeadlineHint } from "../utils/timezone.js";
@@ -193,6 +194,19 @@ async function getProductivityReport(req, res) {
   });
 }
 
+async function getWeeklyReview(req, res) {
+  const user = await User.findById(req.userId);
+  const tasks = await Task.find({ user: req.userId });
+  const goals = await Goal.find({ user: req.userId });
+  const habits = await Habit.find({ user: req.userId });
+  const review = await generateWeeklyReview(tasks, user?.name || "there", goals, habits);
+  res.json({
+    review:
+      review ||
+      "Weekly reviews are not available yet. Keep tracking tasks and the AI will provide a clear recap and next-week plan.",
+  });
+}
+
 async function searchKnowledgeGraph(req, res) {
   const query = String(req.query.q || "").trim();
   if (!query) {
@@ -205,4 +219,4 @@ async function searchKnowledgeGraph(req, res) {
   res.json({ query, results, message: results.length ? "" : "No matching items found yet." });
 }
 
-export { getRecommendations, handleVoiceCommand, getRescuePlan, getHabitSuggestions, getSummary, getCareerFinanceSummary, getProductivityReport, searchKnowledgeGraph };
+export { getRecommendations, handleVoiceCommand, getRescuePlan, getHabitSuggestions, getSummary, getCareerFinanceSummary, getProductivityReport, getWeeklyReview, searchKnowledgeGraph };

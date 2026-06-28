@@ -18,6 +18,7 @@ const alertSchema = new mongoose.Schema(
 );
 
 // Index for efficient querying of active alarms
-alertSchema.index({ user: 1, alarmTime: 1, active: 1 });
+// `user` field is already indexed via `index: true` on the schema field.
+alertSchema.index({ alarmTime: 1, active: 1 });
 
 export default mongoose.model("Alert", alertSchema);

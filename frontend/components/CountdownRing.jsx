@@ -22,7 +22,7 @@ export default function CountdownRing({ deadline, createdAt, size = 56 }) {
   }
 
   const hoursLeft = ms / 3600000;
-  let color = "#2DD4BF"; // teal: plenty of time
+  let color = "#C9982A"; // gold: plenty of time
   if (hoursLeft <= 1 / 3) color = "#EF4444"; // <=20min: red
   else if (hoursLeft <= 1) color = "#F59E0B"; // <=1h: amber
   else if (hoursLeft <= 24) color = "#FBBF24"; // <=24h: warm amber-yellow

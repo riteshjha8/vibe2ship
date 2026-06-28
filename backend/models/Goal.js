@@ -8,6 +8,7 @@ const goalSchema = new mongoose.Schema(
     targetDate: { type: Date },
     progress: { type: Number, min: 0, max: 100, default: 0 },
     status: { type: String, enum: ["active", "completed", "abandoned"], default: "active" },
+    missedReminderSentAt: { type: Date, default: null },
     milestones: [
       {
         title: { type: String, required: true, trim: true },

@@ -9,17 +9,18 @@
     "start": "node server.js"
   },
   "dependencies": {
-    
     "axios": "^1.18.1",
     "bcryptjs": "^2.4.3",
     "cohere-ai": "^7.10.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.22.2",
-    "ics": "^3.7.2",
+    "googleapis": "^173.0.0",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^1.21.0",
     "luxon": "^3.4.4",
     "mongoose": "^8.4.0",
+    "multer": "^2.2.0",
     "node-cron": "^4.5.0",
     "nodemailer": "^9.0.1",
     "socket.io": "^4.7.5"

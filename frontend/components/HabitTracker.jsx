@@ -24,7 +24,7 @@ export default function HabitTracker({ habit, onChange, onDelete }) {
   }
 
   return (
-    <div className="glass-card min-w-0 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/85 p-5 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.75)] transition hover:-translate-y-0.5 hover:border-teal-500/40">
+    <div className="glass-card min-w-0 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/85 p-5 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.75)] transition hover:-translate-y-0.5 hover:border-gold-500/40">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-3">
           <div className="flex min-w-0 items-center gap-2 flex-wrap">
@@ -45,7 +45,7 @@ export default function HabitTracker({ habit, onChange, onDelete }) {
                 <span>{checklistProgress}%</span>
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-slate-800">
-                <div className="h-full rounded-full bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-400" style={{ width: `${checklistProgress}%` }} />
+                <div className="h-full rounded-full bg-gradient-to-r from-gold-300 via-gold-500 to-amber-400" style={{ width: `${checklistProgress}%` }} />
               </div>
             </div>
           )}
@@ -56,7 +56,7 @@ export default function HabitTracker({ habit, onChange, onDelete }) {
             onClick={checkIn}
             disabled={checkedToday}
             className={`inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-              checkedToday ? "bg-slate-800 text-slate-400 cursor-default" : "bg-teal-500 text-slate-950 hover:bg-teal-400"
+              checkedToday ? "bg-slate-800 text-slate-400 cursor-default" : "bg-gold-500 text-slate-950 hover:bg-gold-400"
             }`}
           >
             {checkedToday ? "Done today" : "Check in"}
@@ -79,11 +79,11 @@ export default function HabitTracker({ habit, onChange, onDelete }) {
               onClick={() => toggleChecklistItem(item._id)}
               className={`group flex w-full min-w-0 items-center gap-3 rounded-3xl border px-4 py-3 text-left transition ${
                 item.done
-                  ? "border-teal-500/40 bg-teal-500/10 text-slate-100 shadow-inner shadow-teal-500/10"
-                  : "border-slate-800 bg-slate-900/90 text-slate-300 hover:border-teal-500/40 hover:bg-slate-900"
+                  ? "border-gold-500/40 bg-gold-500/10 text-slate-100 shadow-inner shadow-gold-500/10"
+                  : "border-slate-800 bg-slate-900/90 text-slate-300 hover:border-gold-500/40 hover:bg-slate-900"
               }`}
             >
-              <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border ${item.done ? "border-teal-400 bg-teal-400 text-slate-950" : "border-slate-700"}`}>
+              <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border ${item.done ? "border-gold-300 bg-gold-300 text-slate-950" : "border-slate-700"}`}>
                 {item.done ? "✓" : ""}
               </span>
               <span className="min-w-0 text-sm leading-6 break-words">{item.title}</span>

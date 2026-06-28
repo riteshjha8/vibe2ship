@@ -8,7 +8,7 @@ export default function IntegrationsPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="font-display text-2xl font-semibold">Integrations</h1>
-          <p className="text-sm text-slate-400">Link Gmail, Outlook, GitHub, Discord, WhatsApp, payments, and more.</p>
+          <p className="text-sm text-slate-400">Link GitHub, Discord, WhatsApp, payments, and more.</p>
         </div>
       </div>
       <IntegrationPanel />

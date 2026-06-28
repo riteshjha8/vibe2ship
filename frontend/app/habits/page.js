@@ -88,7 +88,7 @@ export default function HabitsPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Morning workout"
-                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
+                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold-400 outline-none"
               />
             </div>
             <div>
@@ -98,7 +98,7 @@ export default function HabitsPage() {
                 onChange={(e) => setChecklistText(e.target.value)}
                 placeholder="Write up to 8 habit checklist items, one per line"
                 rows={4}
-                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
+                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold-400 outline-none"
               />
               <p className="mt-2 text-xs text-slate-500">Keep items short and actionable. Leaving this blank creates a simple habit.</p>
             </div>
@@ -110,13 +110,13 @@ export default function HabitsPage() {
               <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
-                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-teal-400 outline-none"
+                className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-gold-400 outline-none"
               >
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
               </select>
             </div>
-            <button className="inline-flex w-full items-center justify-center rounded-2xl bg-teal-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-400">
+            <button className="inline-flex w-full items-center justify-center rounded-2xl bg-gold-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-gold-400">
               Add habit
             </button>
           </div>
@@ -191,13 +191,13 @@ export default function HabitsPage() {
                             }
                           }}
                           disabled={creatingTaskId === suggestion.id}
-                          className="rounded-full bg-teal-500 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-teal-400 disabled:opacity-60"
+                          className="rounded-full bg-gold-500 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-gold-400 disabled:opacity-60"
                         >
                           {creatingTaskId === suggestion.id ? "Creating…" : "Create task"}
                         </button>
                       </div>
                       {suggestion.relevantHabit && (
-                        <div className="inline-flex items-center rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
+                        <div className="inline-flex items-center rounded-full border border-gold-500/20 bg-gold-500/10 px-3 py-1 text-xs font-medium text-gold-300">
                           {suggestion.relevantHabit}
                         </div>
                       )}

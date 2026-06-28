@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import tryOpenApp from "@/lib/launchApp";
 import IntegrationCard from "./IntegrationCard";
+import MeetingManager from "./MeetingManager";
 
 export default function IntegrationPanel() {
   const [integrations, setIntegrations] = useState([]);
@@ -101,20 +102,23 @@ export default function IntegrationPanel() {
       <div className="flex items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="font-display text-lg font-semibold">Integrations</h3>
-          <p className="text-sm text-slate-400">Connect the services that matter for email, calendar, docs, payments, and workflow automation.</p>
+          <p className="text-sm text-slate-400">Connect the services that matter for docs, payments, and workflow automation.</p>
         </div>
       </div>
       {loading ? (
         <p className="text-sm text-slate-500">Loading integrations…</p>
       ) : (
-        <div className="grid gap-3">{integrations.map((integration) => (
-          <IntegrationCard
-            key={integration.type}
-            integration={integration}
-            onConnect={connect}
-            onDisconnect={disconnect}
-          />
-        ))}</div>
+        <>
+          <div className="grid gap-3">{integrations.map((integration) => (
+            <IntegrationCard
+              key={integration.type}
+              integration={integration}
+              onConnect={connect}
+              onDisconnect={disconnect}
+            />
+          ))}</div>
+          <MeetingManager />
+        </>
       )}
       {message && <p className="text-xs text-slate-400 mt-3">{message}</p>}
     </div>

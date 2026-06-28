@@ -29,7 +29,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center p-6">
       <form onSubmit={submit} className="glass-card rounded-2xl w-full max-w-sm p-8 space-y-4">
         <Link href="/" className="font-display font-semibold text-lg block mb-2">
-          FinalPing <span className="text-teal-400">AI</span>
+          FinalPing <span className="text-gold-300">AI</span>
         </Link>
         <h1 className="font-display text-xl font-semibold">Welcome back</h1>
         {error && <p className="text-sm text-alarm-500">{error}</p>}
@@ -40,7 +40,7 @@ export default function LoginPage() {
             required
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-gold-400 outline-none"
           />
         </div>
         <div>
@@ -50,17 +50,17 @@ export default function LoginPage() {
             required
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-gold-400 outline-none"
           />
         </div>
         <button
           disabled={busy}
-          className="w-full rounded-lg bg-teal-500 hover:bg-teal-400 text-ink font-medium py-2.5 transition disabled:opacity-60"
+          className="w-full rounded-lg bg-gold-500 hover:bg-gold-400 text-ink font-medium py-2.5 transition disabled:opacity-60"
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
         <p className="text-sm text-slate-400 text-center">
-          No account? <Link href="/register" className="text-teal-400 hover:underline">Create one</Link>
+          No account? <Link href="/register" className="text-gold-300 hover:underline">Create one</Link>
         </p>
       </form>
     </main>

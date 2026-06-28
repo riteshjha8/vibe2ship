@@ -7,13 +7,25 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#0B1220",      // deep navy background
+        ink: "#0A0A0A",
         slate: {
-          850: "#16213A",
+          950: "#0A0A0A",
+          900: "#171717",
+          800: "#1F1F1F",
+          700: "#2A2A2A",
         },
         teal: {
-          400: "#2DD4BF",
-          500: "#14B8A6",
+          300: "#E4C569",
+          400: "#D4AF37",
+          500: "#C9982A",
+        },
+        gold: {
+          300: "#E4C569",
+          400: "#D4AF37",
+          500: "#C9982A",
+        },
+        success: {
+          500: "#16A34A",
         },
         amber: {
           400: "#FBBF24",
@@ -30,7 +42,7 @@ module.exports = {
         mono: ["'JetBrains Mono'", "ui-monospace", "SFMono-Regular"],
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(45,212,191,0.15), 0 8px 30px -10px rgba(45,212,191,0.25)",
+        glow: "0 0 0 1px rgba(212,175,55,0.18), 0 8px 30px -10px rgba(212,175,55,0.22)",
       },
       keyframes: {
         ringPulse: {

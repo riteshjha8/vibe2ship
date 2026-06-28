@@ -25,6 +25,8 @@ import calendarRoutes from "./routes/calendarRoutes.js";
 import alertRoutes from "./routes/alertRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import testRoutes from "./routes/testRoutes.js";
+import meetingRoutes from "./routes/meetingRoutes.js";
+import assignmentRoutes from "./routes/assignmentRoutes.js";
 
 console.log("routes loaded");
 
@@ -64,6 +66,8 @@ app.use("/api/integrations", integrationRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/alerts", alertRoutes);
 app.use("/api/test", testRoutes);
+app.use("/api/meetings", meetingRoutes);
+app.use("/api/assignments", assignmentRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -72,21 +76,48 @@ console.log("app configured");
 
 initSocket(io);
 
-const PORT = process.env.PORT || 5000;
+const DEFAULT_PORT = Number(process.env.PORT || 5000);
 
 console.log("connecting to database...");
 
 async function startApp() {
   const dbConnected = await connectDB();
 
-  server.listen(PORT, () => {
-    console.log(`Vibe2Ship API running on http://localhost:${PORT}`);
-    if (dbConnected) {
-      startReminderScheduler(io);
-    } else {
-      console.warn("Reminder scheduler disabled until MongoDB is available.");
-    }
-  });
+  // Try to bind to the default port; if in use, try the next few ports.
+  const maxAttempts = 5;
+  let attempt = 0;
+  let port = DEFAULT_PORT;
+
+  function tryListen(p) {
+    attempt++;
+    server.once("error", (err) => {
+      if (err && err.code === "EADDRINUSE") {
+        console.warn(`Port ${p} in use.`);
+        if (attempt < maxAttempts) {
+          port = DEFAULT_PORT + attempt; // try next port
+          console.log(`Attempting to listen on port ${port} instead...`);
+          tryListen(port);
+        } else {
+          console.error(`All ${maxAttempts} port attempts failed. Please free port ${DEFAULT_PORT} or set PORT env.`);
+          process.exit(1);
+        }
+      } else {
+        console.error("Server error:", err);
+        process.exit(1);
+      }
+    });
+
+    server.listen(p, () => {
+      console.log(`Vibe2Ship API running on http://localhost:${p}`);
+      if (dbConnected) {
+        startReminderScheduler(io);
+      } else {
+        console.warn("Reminder scheduler disabled until MongoDB is available.");
+      }
+    });
+  }
+
+  tryListen(port);
 }
 
 startApp();

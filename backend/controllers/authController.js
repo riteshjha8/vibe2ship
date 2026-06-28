@@ -5,7 +5,7 @@ import { sendMail } from "../utils/email.js";
 
 async function register(req, res) {
   try {
-    const { name, email, password, timezone, country } = req.body;
+    const { name, email, password, timezone, country, mobileNumber } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Name, email and password are required" });
     }
@@ -15,6 +15,7 @@ async function register(req, res) {
     const user = await User.create({
       name,
       email,
+      mobileNumber: mobileNumber?.trim() || "",
       password,
       timezone: timezone || "Asia/Kolkata",
       country: country || "IN",
@@ -104,12 +105,13 @@ async function me(req, res) {
 
 async function updateProfile(req, res) {
   try {
-    const { name, timezone, country, notificationPrefs } = req.body;
+    const { name, timezone, country, mobileNumber, notificationPrefs } = req.body;
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
     if (name) user.name = name;
     if (timezone) user.timezone = timezone;
     if (country) user.country = country;
+    if (mobileNumber !== undefined) user.mobileNumber = mobileNumber?.trim() || "";
     if (notificationPrefs) user.notificationPrefs = { ...user.notificationPrefs, ...notificationPrefs };
     await user.save();
     res.json({ user: user.toSafeJSON() });

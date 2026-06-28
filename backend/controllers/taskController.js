@@ -1,6 +1,7 @@
 import Task from "../models/Task.js";
 import { localToUTC } from "../utils/timezone.js";
 import { breakdownTask } from "../utils/cohere.js";
+import { emitToUser } from "../sockets/index.js";
 
 // Priority score = urgency (deadline proximity) + importance, weighted.
 // Higher score = do it sooner. Purely rule-based so it always works even
@@ -84,6 +85,47 @@ async function createTask(req, res) {
   });
   task.priorityScore = computePriorityScore(task);
   await task.save();
+
+  // If the deadline is imminent (within the smallest configured threshold),
+  // emit an immediate reminder so freshly-created tasks ring like scheduled ones.
+  try {
+    const now = Date.now();
+    const msLeft = new Date(task.deadline).getTime() - now;
+    // Determine smallest threshold in milliseconds
+    const thresholds = task.reminderThresholds && task.reminderThresholds.length ? task.reminderThresholds : ["24h", "5h", "1h", "30m", "5m", "1m"];
+    // parse threshold like "1m" "30m" "1h" etc.
+    const toMs = (key) => {
+      if (!key) return Infinity;
+      const k = String(key).trim().toLowerCase();
+      if (k.endsWith("d")) return Number(k.slice(0, -1)) * 24 * 60 * 60 * 1000;
+      if (k.endsWith("h")) return Number(k.slice(0, -1)) * 60 * 60 * 1000;
+      if (k.endsWith("m")) return Number(k.slice(0, -1)) * 60 * 1000;
+      if (k === "24h") return 24 * 60 * 60 * 1000;
+      return Infinity;
+    };
+    const smallestMs = Math.min(...thresholds.map(toMs));
+    if (msLeft >= 0 && msLeft <= smallestMs) {
+      // Build a minimal payload similar to reminderScheduler.fireReminder
+      const payload = {
+        taskId: task._id,
+        title: task.title,
+        ringType: thresholds[thresholds.length - 1] || "1m",
+        message: `Reminder: ${task.title} is due soon.`,
+        deadline: task.deadline,
+        timeLeft: null,
+        actions: [],
+      };
+      // mark the smallest threshold as sent to avoid duplicate firing by scheduler
+      task.remindersSent = task.remindersSent || {};
+      const smallestKey = thresholds[thresholds.length - 1] || "1m";
+      task.remindersSent[smallestKey] = true;
+      await task.save();
+      // emit using stored io instance
+      emitToUser(task.user, "task:reminder", payload);
+    }
+  } catch (err) {
+    console.warn("Immediate reminder emission failed:", err && err.message ? err.message : err);
+  }
 
   res.status(201).json({ task });
 }

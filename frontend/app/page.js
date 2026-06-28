@@ -81,7 +81,7 @@ const FEATURE_SECTIONS = [
   {
     title: "Integrations",
     items: [
-      "Gmail, Google Calendar, Outlook, GitHub, GitLab, Slack, Discord",
+      "GitHub, GitLab, Slack, Discord, Google Drive, OneDrive",
       "Notion, Trello, Jira, Google Drive, Dropbox, OneDrive",
       "Zoom, Microsoft Teams, WhatsApp, SMS APIs, Google Maps",
       "Stripe, PayPal, and extensible workflow plugins",
@@ -120,7 +120,7 @@ export default function LandingPage() {
         <Logo />
         <div className="flex items-center gap-3 text-sm">
           <Link href="/login" className="text-slate-300 hover:text-white transition">Sign in</Link>
-          <Link href="/register" className="bg-teal-500 hover:bg-teal-400 text-ink px-4 py-2 rounded-lg font-medium transition">
+          <Link href="/register" className="bg-gold-500 hover:bg-gold-400 text-ink px-4 py-2 rounded-lg font-medium transition">
             Get started
           </Link>
         </div>
@@ -128,17 +128,17 @@ export default function LandingPage() {
 
       <section className="px-6 sm:px-10 max-w-7xl mx-auto pt-12 pb-20 grid lg:grid-cols-2 gap-12 items-center">
         <div>
-          <p className="text-xs font-mono uppercase tracking-[0.2em] text-teal-400 mb-4">The last-minute life saver</p>
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-gold-300 mb-4">The last-minute life saver</p>
           <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-[1.1] mb-5">
             Deadlines don't wait.
             <br />
-            Neither should your <span className="text-teal-400">reminders</span>.
+              Neither should your <span className="text-gold-300">reminders</span>.
           </h1>
           <p className="text-slate-400 text-base sm:text-lg max-w-md mb-8">
             Students, professionals, and entrepreneurs stay on top of assignments, deadlines, bill payments, interviews, and every important commitment. An AI productivity companion that prioritizes your work, plans your day, and rings — out loud — at 24 hours, 1 hour, and 20 minutes before anything is due.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/register" className="bg-teal-500 hover:bg-teal-400 text-ink px-6 py-3 rounded-lg font-medium transition">
+            <Link href="/register" className="bg-gold-500 hover:bg-gold-400 text-ink px-6 py-3 rounded-lg font-medium transition">
               Start for free
             </Link>
             <Link href="/login" className="border border-white/15 hover:bg-white/5 px-6 py-3 rounded-lg font-medium transition">
@@ -170,7 +170,7 @@ export default function LandingPage() {
         <div className="grid sm:grid-cols-3 gap-6">
           {STEPS.map((s) => (
             <div key={s.n} className="glass-card rounded-xl p-6">
-              <span className="font-mono text-teal-400 text-sm">{s.n}</span>
+                <span className="font-mono text-gold-300 text-sm">{s.n}</span>
               <h3 className="font-display font-medium mt-2 mb-1.5">{s.title}</h3>
               <p className="text-sm text-slate-400">{s.body}</p>
             </div>
@@ -184,18 +184,18 @@ export default function LandingPage() {
             <h2 className="font-display text-2xl font-semibold">Everything in one companion</h2>
             <p className="text-slate-400 max-w-xl mt-2">Built as an autonomous AI operating system for last-minute deadlines, student life, developer productivity, and daily routines.</p>
           </div>
-          <Link href="/login" className="rounded-full bg-teal-500 px-5 py-2.5 text-sm text-ink font-medium hover:bg-teal-400 transition">
+          <Link href="/login" className="rounded-full bg-gold-500 px-5 py-2.5 text-sm text-ink font-medium hover:bg-gold-400 transition">
             Open your AI dashboard
           </Link>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {FEATURE_SECTIONS.map((section) => (
             <div key={section.title} className="glass-card rounded-2xl p-6">
-              <h3 className="font-display font-semibold text-sm text-teal-300 mb-4">{section.title}</h3>
+                <h3 className="font-display font-semibold text-sm text-gold-300 mb-4">{section.title}</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 {section.items.map((item) => (
                   <li key={item} className="flex gap-2 items-start">
-                    <span className="mt-1 text-teal-300">•</span>
+                      <span className="mt-1 text-gold-300">•</span>
                     <span>{item}</span>
                   </li>
                 ))}

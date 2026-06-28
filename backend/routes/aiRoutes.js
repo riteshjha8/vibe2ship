@@ -12,5 +12,6 @@ router.get("/search", ctrl.searchKnowledgeGraph);
 router.post("/voice-command", ctrl.handleVoiceCommand);
 router.get("/career-finance-summary", ctrl.getCareerFinanceSummary);
 router.get("/productivity-report", ctrl.getProductivityReport);
+router.get("/weekly-review", ctrl.getWeeklyReview);
 
 export default router;

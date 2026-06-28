@@ -22,7 +22,7 @@ export default function IntegrationCard({ integration, onConnect }) {
         <button
           type="button"
           onClick={() => onConnect(integration.type, integration.label)}
-          className={`text-xs px-3 py-2 rounded-full font-semibold transition bg-teal-500 text-ink hover:bg-teal-400`}
+          className={`text-xs px-3 py-2 rounded-full font-semibold transition bg-gold-500 text-ink hover:bg-gold-400`}
         >
           {integration.landingUrl ? "Open" : integration.payment?.setupUrl ? "Set up" : "Open"}
         </button>

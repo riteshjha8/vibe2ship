@@ -1,60 +1,82 @@
-import { createEvents } from "ics";
 import Task from "../models/Task.js";
+import CalendarEvent from "../models/CalendarEvent.js";
+import { localToUTC } from "../utils/timezone.js";
 
-// Calendar integration: export all open tasks as a downloadable .ics file
-// that imports cleanly into Google Calendar, Outlook, or Apple Calendar -
-// no OAuth/API keys needed on either side.
-async function exportCalendar(req, res) {
-  const tasks = await Task.find({ user: req.userId, status: { $ne: "done" } });
-
-  const events = tasks.map((t) => {
-    const d = new Date(t.deadline);
-    return {
-      title: t.title,
-      description: t.description || "Created in Vibe2Ship - The Last-Minute Life Saver",
-      start: [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()],
-      startInputType: "utc",
-      duration: { minutes: Math.max(t.effortMinutes || 30, 15) },
-      alarms: [
-        { action: "display", trigger: { hours: 24, before: true } },
-        { action: "display", trigger: { hours: 1, before: true } },
-        { action: "display", trigger: { minutes: 20, before: true } },
-      ],
-    };
-  });
-
-  const { error, value } = createEvents(events);
-  if (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Could not generate calendar file" });
-  }
-
-  res.setHeader("Content-Type", "text/calendar");
-  res.setHeader("Content-Disposition", "attachment; filename=vibe2ship-tasks.ics");
-  res.send(value);
-}
-
-// Simple month view data: tasks grouped by date for the calendar UI
 async function getMonthView(req, res) {
-  const { year, month } = req.query; // month is 1-12
+  const { year, month } = req.query;
   const y = parseInt(year, 10);
   const m = parseInt(month, 10);
   const start = new Date(Date.UTC(y, m - 1, 1));
   const end = new Date(Date.UTC(y, m, 1));
 
-  const tasks = await Task.find({
-    user: req.userId,
-    deadline: { $gte: start, $lt: end },
-  });
+  const [tasks, events] = await Promise.all([
+    Task.find({
+      user: req.userId,
+      deadline: { $gte: start, $lt: end },
+    }),
+    CalendarEvent.find({
+      user: req.userId,
+      startAt: { $gte: start, $lt: end },
+    }),
+  ]);
 
   const byDay = {};
   tasks.forEach((t) => {
     const day = new Date(t.deadline).getUTCDate();
     byDay[day] = byDay[day] || [];
-    byDay[day].push(t);
+    byDay[day].push({ ...t.toObject(), kind: "task" });
+  });
+  events.forEach((event) => {
+    const day = new Date(event.startAt).getUTCDate();
+    byDay[day] = byDay[day] || [];
+    byDay[day].push({ ...event.toObject(), kind: "event" });
   });
 
-  res.json({ byDay });
+  res.json({ byDay, events });
 }
 
-export { exportCalendar, getMonthView };
+async function createEvent(req, res) {
+  const { title, description = "", location = "", startLocal, timezone = "Asia/Kolkata", durationMinutes = 30 } = req.body;
+
+  if (!title || !startLocal) {
+    return res.status(400).json({ message: "Title and start time are required." });
+  }
+
+  let startAt;
+  try {
+    startAt = localToUTC(startLocal, timezone);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+
+  const endAt = new Date(startAt.getTime() + Math.max(Number(durationMinutes) || 30, 15) * 60000);
+
+  const event = await CalendarEvent.create({
+    user: req.userId,
+    title: String(title).trim(),
+    description: String(description).trim(),
+    location: String(location).trim(),
+    startAt,
+    endAt,
+    timezone,
+    source: "manual",
+  });
+
+  res.status(201).json({ event });
+}
+
+async function deleteEvent(req, res) {
+  const { id } = req.params;
+  const event = await CalendarEvent.findOne({ _id: id, user: req.userId });
+  if (!event) return res.status(404).json({ message: "Calendar event not found." });
+
+  await event.deleteOne();
+  res.json({ message: "Event deleted." });
+}
+
+async function listEvents(req, res) {
+  const events = await CalendarEvent.find({ user: req.userId }).sort({ startAt: 1 });
+  res.json({ events });
+}
+
+export { getMonthView, createEvent, listEvents, deleteEvent };

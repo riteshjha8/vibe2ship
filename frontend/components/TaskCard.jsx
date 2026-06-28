@@ -86,7 +86,7 @@ export default function TaskCard({ task, onChange, onDelete, onEdit }) {
               disabled={busy}
               onClick={() => setStatus(done ? "pending" : "done")}
               className={`text-xs px-2.5 py-1 rounded-full transition ${
-                done ? "border border-white/15 hover:bg-white/5" : "bg-teal-500/20 text-teal-300 hover:bg-teal-500/30"
+                done ? "border border-white/15 hover:bg-white/5" : "bg-gold-500/20 text-gold-300 hover:bg-gold-500/30"
               }`}
             >
               {done ? "Reopen" : "Mark done"}
@@ -129,7 +129,7 @@ export default function TaskCard({ task, onChange, onDelete, onEdit }) {
                     type="checkbox"
                     checked={s.done}
                     onChange={() => toggleSubtask(s._id)}
-                    className="accent-teal-500 h-4 w-4"
+                    className="accent-gold-500 h-4 w-4"
                   />
                   <span className={s.done ? "line-through text-slate-500" : "text-slate-200"}>{s.title}</span>
                 </li>

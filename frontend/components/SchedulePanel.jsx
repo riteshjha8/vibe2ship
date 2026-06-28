@@ -32,7 +32,7 @@ export default function SchedulePanel() {
           <button
             type="button"
             onClick={() => load("recommendation")}
-            className={`text-xs rounded-full px-3 py-2 transition ${mode === "recommendation" ? "bg-teal-500 text-ink" : "border border-white/10 text-slate-300 hover:bg-white/5"}`}
+            className={`text-xs rounded-full px-3 py-2 transition ${mode === "recommendation" ? "bg-gold-500 text-ink" : "border border-white/10 text-slate-300 hover:bg-white/5"}`}
           >
             Daily plan
           </button>

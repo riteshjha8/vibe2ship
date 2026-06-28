@@ -99,6 +99,69 @@ async function contextualReminderMessage({ title, timeLeftLabel, urgency }) {
   return result;
 }
 
+function normalizeReplyText(text = "") {
+  return text.toLowerCase().trim();
+}
+
+function looksLikeGreeting(message = "") {
+  const normalized = normalizeReplyText(message);
+  return /^(hi|hello|hey|hii|hyy|hey there|hello there|good morning|good afternoon|good evening|yo|sup)$/i.test(normalized) || /^(hi|hello|hey|hii|hyy|hey there|hello there|good morning|good afternoon|good evening|yo|sup)\b/.test(normalized);
+}
+
+function classifyReplyTopic(message = "") {
+  const normalized = normalizeReplyText(message);
+  if (/(payment|payments|bill|bills|invoice|invoices|salary|expense|expenses|budget|finance|money|loan|debt|refund|wallet|bank)/.test(normalized)) {
+    return "finance";
+  }
+  if (/(assignment|assignments|homework|project|study|exam|deadline|deadlines|late|due date|submission|report|task|tasks|schedule|planning)/.test(normalized)) {
+    return "task";
+  }
+  if (/(health|fitness|sleep|exercise|diet|wellness|hydration|stress|mental health|medicine)/.test(normalized)) {
+    return "health";
+  }
+  return null;
+}
+
+function buildLocalAssistantReply(history = []) {
+  const latestUserMessage = [...history].reverse().find((message) => message?.role === "user" && typeof message?.content === "string" && message.content.trim());
+  const message = latestUserMessage?.content || "";
+  if (!message.trim()) {
+    return "Hello! I’m here to help. What would you like assistance with?";
+  }
+
+  if (looksLikeGreeting(message)) {
+    return "Hello! I’m here to help. What would you like to tackle today?";
+  }
+
+  const topic = classifyReplyTopic(message);
+  if (!topic) return null;
+
+  if (topic === "finance") {
+    return [
+      "Here’s a clear way to handle this:",
+      "- Review your current expenses and separate essentials from non-essential spending.",
+      "- Contact the relevant person or service early if a payment is delayed or a bill is overdue.",
+      "- Set a simple payment plan and track due dates so you avoid future delays.",
+    ].join("\n");
+  }
+
+  if (topic === "health") {
+    return [
+      "Here’s a practical approach:",
+      "- Keep your routine simple with regular hydration, meals, and sleep.",
+      "- Take short breaks and move around if you have been sitting for long periods.",
+      "- Reduce pressure by focusing on one important task at a time.",
+    ].join("\n");
+  }
+
+  return [
+    "Here’s a practical approach:",
+    "- Break the task into smaller steps so it feels more manageable.",
+    "- Prioritize the most urgent item first and set a clear deadline for each step.",
+    "- Keep a short progress check-in so you can adjust quickly if anything slips.",
+  ].join("\n");
+}
+
 function buildContextSummary({ tasks = [], goals = [], habits = [], alerts = [], memories = [], summaries = [], preferences = {} } = {}) {
   const sections = [];
   if (tasks.length) {
@@ -318,7 +381,7 @@ async function summarizeCareerFinance(tasks, userName, goals = [], habits = []) 
 
 async function generateProductivityReport(tasks, userName, goals = [], habits = []) {
   const recentTasks = tasks
-    .map((t) => `- ${t.title} [${t.status}] due ${new Date(t.deadline).toLocaleDateString()}${t.location ? ` at ${t.location}` : ""}`)
+    .map((t) => `- ${t.title} [${t.status}] due ${t.deadline ? new Date(t.deadline).toLocaleDateString() : "unscheduled"}${t.location ? ` at ${t.location}` : ""}`)
     .join("\n");
   const goalSummary = goals.length
     ? `\nActive goals:\n${goals.slice(0, 5).map((g) => `- ${g.title} (${g.progress || 0}% complete)`).join("\n")}`
@@ -326,7 +389,22 @@ async function generateProductivityReport(tasks, userName, goals = [], habits = 
   const habitSummary = habits.length
     ? `\nHabits:\n${habits.slice(0, 4).map((h) => `- ${h.title} (${h.frequency || "daily"}, streak ${h.streak || 0})`).join("\n")}`
     : "";
-  const prompt = `You are an AI productivity analyst for ${userName}. Here are their current tasks:${recentTasks ? `\n${recentTasks}` : " none"}${goalSummary}${habitSummary}\n\nWrite a weekly productivity report with 3 quick insights and one recommended focus area. Keep it concise and action-oriented.`;
+  const prompt = `You are an AI productivity analyst for ${userName}. Here are their current tasks:${recentTasks ? `\n${recentTasks}` : " none"}${goalSummary}${habitSummary}\n\nWrite a weekly productivity report with 3 quick insights, one recommended focus area, and one short missed-opportunity note. Keep it concise, practical, and in plain language.`;
+  const result = await askCohere(prompt);
+  return result;
+}
+
+async function generateWeeklyReview(tasks, userName, goals = [], habits = []) {
+  const recentTasks = tasks
+    .map((t) => `- ${t.title} (${t.status}) due ${t.deadline ? new Date(t.deadline).toLocaleDateString() : "unscheduled"}${t.location ? ` at ${t.location}` : ""}`)
+    .join("\n");
+  const goalSummary = goals.length
+    ? `\nGoals:\n${goals.slice(0, 5).map((g) => `- ${g.title} (${g.progress || 0}% complete)`).join("\n")}`
+    : "";
+  const habitSummary = habits.length
+    ? `\nHabits:\n${habits.slice(0, 4).map((h) => `- ${h.title} (${h.frequency || "daily"}, streak ${h.streak || 0})`).join("\n")}`
+    : "";
+  const prompt = `You are an AI weekly review coach for ${userName}. Here is what happened this week:${recentTasks ? `\n${recentTasks}` : " none"}${goalSummary}${habitSummary}\n\nProvide a clear weekly review in short bullet points. Include: 1) what went well, 2) what was missed or fell behind, and 3) 2 practical suggestions for next week so the user can improve their planning and focus. Use numbered or bullet format.`;
   const result = await askCohere(prompt);
   return result;
 }
@@ -396,6 +474,11 @@ ${inputBlock}`,
 }
 
 async function generateAssistantResponse(history, userName, sessionTitle, context = {}) {
+  const localReply = buildLocalAssistantReply(history);
+  if (localReply) {
+    return localReply;
+  }
+
   const historyText = history
     .map((message) => `${message.role === "user" ? "User" : message.role === "assistant" ? "Assistant" : "System"}: ${message.content}`)
     .join("\n");
@@ -405,6 +488,9 @@ async function generateAssistantResponse(history, userName, sessionTitle, contex
 You have visibility into the user's current tasks, goals, habits, reminders, calendar, productivity statistics, deadlines, previous conversations, and preferences. Analyze those items to provide highly personalized, actionable guidance.
 
 Always do the following when responding:
+- Write in a calm, polished, supportive tone that feels natural and modern, like a trusted AI assistant.
+- Keep replies concise, warm, and easy to scan, using short paragraphs or bullets when helpful.
+- Tailor the guidance to this product’s purpose: productivity, habits, goals, deadlines, health, finance, study, and work planning.
 - Calculate task priority using deadline, urgency, importance, estimated completion time, dependencies, workload, and user schedule.
 - Recommend the next best task to work on and explain why.
 - Suggest productive habits and recurring routines based on the user's routine.
@@ -420,7 +506,7 @@ ${contextText}
 Conversation history:
 ${historyText}
 
-Respond as the assistant in one concise message. If the user asked a question, answer it directly. If the user requested planning help, give short actionable steps. Keep the answer practical and specific.`;
+Respond as the assistant in one concise, polished message. If the user asked a question, answer it directly. If the user requested planning help, give short actionable steps. Keep the answer practical, specific, and reassuring.`;
   const result = await askCohere(prompt);
   return result;
 }
@@ -437,4 +523,19 @@ ${conversationText}`;
   return result;
 }
 
-export { askCohere, suggestDailySchedule, suggestRescuePlan, suggestHabitActions, breakdownTask, contextualReminderMessage, parseVoiceCommand, summarizeCareerFinance, generateProductivityReport, semanticSearchTasks, generateAssistantResponse, summarizeConversation };
+export {
+  askCohere,
+  suggestDailySchedule,
+  suggestRescuePlan,
+  suggestHabitActions,
+  breakdownTask,
+  contextualReminderMessage,
+  parseVoiceCommand,
+  summarizeCareerFinance,
+  generateProductivityReport,
+  generateWeeklyReview,
+  semanticSearchTasks,
+  generateAssistantResponse,
+  summarizeConversation,
+  buildLocalAssistantReply,
+};

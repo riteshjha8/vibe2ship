@@ -62,11 +62,11 @@ export default function VoiceAssistant({ onTaskCreated }) {
 
   return (
     <div className="glass-card rounded-xl p-5">
-      <h3 className="font-display font-semibold text-sm tracking-wide text-teal-300 mb-3">Voice assistant</h3>
+      <h3 className="font-display font-semibold text-sm tracking-wide text-gold-300 mb-3">Voice assistant</h3>
       <button
         onClick={startListening}
         className={`w-full rounded-lg py-3 text-sm font-medium transition flex items-center justify-center gap-2 ${
-          listening ? "bg-alarm-500/20 text-alarm-500" : "bg-teal-500/15 text-teal-300 hover:bg-teal-500/25"
+          listening ? "bg-alarm-500/20 text-alarm-500" : "bg-gold-500/15 text-gold-300 hover:bg-gold-500/25"
         }`}
       >
         <span className={listening ? "animate-pulse" : ""}>🎙️</span>

@@ -1,14 +1,13 @@
 import User from "../models/User.js";
 
 const AVAILABLE_CONNECTORS = [
-  { type: "gmail", label: "Gmail", oauth: true, landingUrl: "https://mail.google.com" },
-  { type: "outlook", label: "Outlook", oauth: true, landingUrl: "https://outlook.live.com" },
   { type: "github", label: "GitHub", oauth: true, landingUrl: "https://github.com" },
   { type: "vscode", label: "VS Code", oauth: false, landingUrl: "https://vscode.dev", appProtocol: "vscode://" },
   { type: "discord", label: "Discord", oauth: false, landingUrl: "https://discord.com/app", appProtocol: "discord://" },
   { type: "whatsapp", label: "WhatsApp", oauth: true, landingUrl: "https://web.whatsapp.com", appProtocol: "whatsapp://send" },
   { type: "google-meet", label: "Google Meet", oauth: false, landingUrl: "https://meet.google.com", appProtocol: "https://meet.google.com" },
   { type: "google-drive", label: "Google Drive", oauth: false, landingUrl: "https://drive.google.com" },
+  { type: "google-classroom", label: "Google Classroom", oauth: true, landingUrl: "https://classroom.google.com" },
   { type: "one-drive", label: "OneDrive", oauth: false, landingUrl: "https://onedrive.live.com" },
   { type: "zoom", label: "Zoom", oauth: false, landingUrl: "https://zoom.us", appProtocol: "zoommtg://" },
   { type: "teams", label: "Microsoft Teams", oauth: false, landingUrl: "https://teams.microsoft.com", appProtocol: "msteams://" },
@@ -49,10 +48,11 @@ async function connectIntegration(req, res) {
   }
 
   if (connector.oauth) {
-    // If a landingUrl is configured, prefer sending the client there directly
-    if (connector.landingUrl) {
-      // For simple landing connectors (no full OAuth flow), just tell the client to open the landing URL.
-      // Do not modify the user's integrations so the UI continues to show the actual connected state.
+    // For oauth connectors prefer starting the full OAuth flow. Some connectors
+    // (like google-classroom) should use the redirect flow even if a landing
+    // URL is provided earlier in the static list.
+    const useLanding = connector.landingUrl && connector.type !== "google-classroom";
+    if (useLanding) {
       return res.json({ landing: true, landingUrl: connector.landingUrl });
     }
 

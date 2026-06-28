@@ -5,6 +5,7 @@ import TaskCard from "@/components/TaskCard";
 import TaskForm from "@/components/TaskForm";
 import AIStatusPanel from "@/components/AIStatusPanel";
 import TaskSearchPanel from "@/components/TaskSearchPanel";
+import TaskRingToast from "@/components/TaskRingToast";
 import api from "@/lib/api";
 
 const FILTERS = [
@@ -58,11 +59,12 @@ export default function TasksPage() {
 
   return (
     <Shell>
+      <TaskRingToast />
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-display text-2xl font-semibold">Tasks</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-teal-500 hover:bg-teal-400 text-ink px-4 py-2.5 rounded-lg font-medium text-sm transition"
+          className="bg-gold-500 hover:bg-gold-400 text-ink px-4 py-2.5 rounded-lg font-medium text-sm transition"
         >
           + New task
         </button>
@@ -74,7 +76,7 @@ export default function TasksPage() {
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={`text-xs px-3 py-1.5 rounded-full transition ${
-              filter === f.key ? "bg-teal-400/15 text-teal-300" : "text-slate-400 hover:bg-white/5"
+              filter === f.key ? "bg-gold-400/15 text-gold-300" : "text-slate-400 hover:bg-white/5"
             }`}
           >
             {f.label}

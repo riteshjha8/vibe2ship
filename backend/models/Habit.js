@@ -8,6 +8,7 @@ const habitSchema = new mongoose.Schema(
     streak: { type: Number, default: 0 },
     longestStreak: { type: Number, default: 0 },
     lastCompletedAt: { type: Date, default: null },
+    missedReminderSentAt: { type: Date, default: null },
     history: [{ type: Date }],
     checklist: [
       {

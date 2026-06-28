@@ -170,7 +170,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
           <input
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-gold-400 outline-none"
             placeholder="Submit visa application"
             required
           />
@@ -180,7 +180,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             <input
               value={form.location}
               onChange={(e) => update("location", e.target.value)}
-              className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+              className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-gold-400 outline-none"
               placeholder="Starbucks, 5th Ave, Seattle"
             />
             <p className="text-[11px] text-slate-500 mt-1">
@@ -194,7 +194,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             <input
               value={form.category}
               onChange={(e) => update("category", e.target.value)}
-              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
+              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold-400 outline-none"
             />
           </div>
           <div>
@@ -202,7 +202,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             <select
               value={form.importance}
               onChange={(e) => update("importance", Number(e.target.value))}
-              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-teal-400 outline-none"
+              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-gold-400 outline-none"
             >
               {IMPORTANCE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -220,7 +220,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             type="datetime-local"
             value={form.deadlineLocal}
             onChange={(e) => update("deadlineLocal", e.target.value)}
-            className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-teal-400 outline-none"
+            className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-gold-400 outline-none"
             required
           />
           <p className="text-[11px] text-slate-400 mt-1">
@@ -234,7 +234,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             <select
               value={form.smsCountryCode}
               onChange={(e) => update("smsCountryCode", e.target.value)}
-              className="rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-teal-400 outline-none"
+              className="rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-gold-400 outline-none"
             >
               <option value="+1">+1 US</option>
               <option value="+44">+44 UK</option>
@@ -248,7 +248,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
               type="tel"
               value={form.smsNumber}
               onChange={(e) => update("smsNumber", e.target.value)}
-              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-400 outline-none"
+              className="w-full rounded-lg bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold-400 outline-none"
               placeholder="1234567890"
             />
           </div>
@@ -263,7 +263,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
             type="checkbox"
             checked={form.notifyBySMS}
             onChange={(e) => update("notifyBySMS", e.target.checked)}
-            className="accent-teal-500 h-4 w-4"
+            className="accent-gold-500 h-4 w-4"
           />
           <label htmlFor="notifyBySMS" className="text-sm text-slate-300">
             Send SMS reminders for this task
@@ -291,7 +291,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
                       : form.reminderThresholds.filter((value) => value !== option.value);
                     update("reminderThresholds", next);
                   }}
-                  className="accent-teal-500 h-4 w-4"
+                  className="accent-gold-500 h-4 w-4"
                 />
                 {option.label}
               </label>
@@ -303,13 +303,13 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
                 type="text"
                 value={customThresholdInput}
                 onChange={(e) => setCustomThresholdInput(e.target.value)}
-                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-teal-400 outline-none"
+                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus:border-gold-400 outline-none"
                 placeholder="e.g. 15m, 2h, 1d"
               />
               <button
                 type="button"
                 onClick={addCustomThreshold}
-                className="rounded-lg bg-teal-500 hover:bg-teal-400 px-3 py-2 text-sm text-ink"
+                className="rounded-lg bg-gold-500 hover:bg-gold-400 px-3 py-2 text-sm text-ink"
               >
                 Add
               </button>
@@ -336,7 +336,7 @@ export default function TaskForm({ task, onCreated, onUpdated, onClose }) {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-lg bg-teal-500 hover:bg-teal-400 text-ink font-medium py-2.5 transition disabled:opacity-60"
+          className="w-full rounded-lg bg-gold-500 hover:bg-gold-400 text-ink font-medium py-2.5 transition disabled:opacity-60"
         >
           {busy ? (task ? "Updating…" : "Saving…") : task ? "Update task" : "Create task"}
         </button>

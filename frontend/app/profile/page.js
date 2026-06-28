@@ -22,7 +22,9 @@ export default function ProfilePage() {
   const { user, updateUser, logout } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [timezone, setTimezone] = useState(user?.timezone || detectTimezone());
+  const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || "");
   const [emailOn, setEmailOn] = useState(user?.notificationPrefs?.email ?? true);
+  const [smsOn, setSmsOn] = useState(user?.notificationPrefs?.sms ?? true);
   const [voiceOn, setVoiceOn] = useState(user?.notificationPrefs?.voice ?? true);
   const [saved, setSaved] = useState(false);
 
@@ -31,7 +33,8 @@ export default function ProfilePage() {
     const { data } = await api.put("/auth/me", {
       name,
       timezone,
-      notificationPrefs: { email: emailOn, voice: voiceOn },
+      mobileNumber,
+      notificationPrefs: { email: emailOn, sms: smsOn, voice: voiceOn },
     });
     updateUser(data.user);
     setSaved(true);
@@ -56,7 +59,7 @@ export default function ProfilePage() {
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 outline-none"
+                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none"
                 />
               </div>
 
@@ -70,6 +73,16 @@ export default function ProfilePage() {
               </div>
 
               <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 mb-2">Mobile number</label>
+                <input
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  placeholder="Enter number for SMS alerts"
+                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none"
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 mb-2">
                   Timezone
                 </label>
@@ -77,7 +90,7 @@ export default function ProfilePage() {
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
-                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 outline-none"
+                  className="w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-slate-100 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none"
                 >
                   {TIMEZONES.map((tz) => (
                     <option key={tz} value={tz} className="bg-slate-950 text-slate-100">
@@ -113,14 +126,21 @@ export default function ProfilePage() {
                 <p className="text-sm font-semibold text-slate-100">Email reminders</p>
                 <p className="text-sm text-slate-500">Receive timely reminder emails for all upcoming deadlines.</p>
               </div>
-              <input type="checkbox" checked={emailOn} onChange={(e) => setEmailOn(e.target.checked)} className="accent-teal-500 h-5 w-5" />
+              <input type="checkbox" checked={emailOn} onChange={(e) => setEmailOn(e.target.checked)} className="accent-gold-500 h-5 w-5" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-100">SMS reminders</p>
+                <p className="text-sm text-slate-500">Receive missed habit and goal reminders on your mobile number.</p>
+              </div>
+              <input type="checkbox" checked={smsOn} onChange={(e) => setSmsOn(e.target.checked)} className="accent-gold-500 h-5 w-5" />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-100">Voice ring alerts</p>
                 <p className="text-sm text-slate-500">Enable audible voice alerts at the final countdown stages.</p>
               </div>
-              <input type="checkbox" checked={voiceOn} onChange={(e) => setVoiceOn(e.target.checked)} className="accent-teal-500 h-5 w-5" />
+              <input type="checkbox" checked={voiceOn} onChange={(e) => setVoiceOn(e.target.checked)} className="accent-gold-500 h-5 w-5" />
             </div>
           </div>
 
@@ -132,7 +152,7 @@ export default function ProfilePage() {
             >
               Sign out
             </button>
-            <button className="w-full sm:w-auto rounded-3xl bg-teal-500 hover:bg-teal-400 text-ink font-semibold px-6 py-3 transition">
+            <button className="w-full sm:w-auto rounded-3xl bg-gold-500 hover:bg-gold-400 text-ink font-semibold px-6 py-3 transition">
               {saved ? "Saved ✓" : "Save changes"}
             </button>
           </div>

@@ -1,7 +1,11 @@
 import "./globals.css";
+import "./animations.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { SocketProvider } from "@/context/SocketContext";
 import ReminderOverlay from "@/components/ReminderOverlay";
+import AutoJoinToast from "@/components/AutoJoinToast";
+import Gold3DBackground from "@/components/Gold3DBackground";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata = {
   title: "FinalPing AI | The Last-Minute Life Saver",
@@ -24,12 +28,16 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body suppressHydrationWarning className="font-body antialiased min-h-screen">
-        <AuthProvider>
-          <SocketProvider>
-            {children}
-            <ReminderOverlay />
-          </SocketProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <SocketProvider>
+              <Gold3DBackground />
+              {children}
+              <ReminderOverlay />
+              <AutoJoinToast />
+            </SocketProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

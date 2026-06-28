@@ -1,6 +1,21 @@
 ﻿"use client";
+/**
+ * FloatingAssistant Component
+ * 
+ * AI chat assistant panel with real-time messaging.
+ * Features:
+ * - Session persistence
+ * - Keyboard shortcuts (Ctrl+K, Alt+Space)
+ * - Responsive mobile layout
+ * - Error recovery
+ * 
+ * @component
+ */
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { getErrorMessage, logError } from "@/utils/apiErrors";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorAlert from "@/components/ErrorAlert";
 
 export default function FloatingAssistant() {
   const [isReady, setIsReady] = useState(false);
@@ -43,7 +58,9 @@ export default function FloatingAssistant() {
           setMessages([]);
         }
       } catch (err) {
-        setError("Unable to load the assistant right now.");
+        const errMsg = getErrorMessage(err);
+        setError(errMsg);
+        logError("FloatingAssistant.openPanel", err);
       } finally {
         setLoading(false);
       }
@@ -76,7 +93,9 @@ export default function FloatingAssistant() {
       setSession(updatedSession || session);
       setInput("");
     } catch (err) {
-      setError("Message failed to send. Try again.");
+      const errMsg = getErrorMessage(err);
+      setError(errMsg);
+      logError("FloatingAssistant.sendMessage", err);
     } finally {
       setLoading(false);
     }
@@ -103,7 +122,7 @@ export default function FloatingAssistant() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white font-semibold shadow-lg shadow-teal-500/25 transition hover:bg-teal-400"
+          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gold-500 text-ink font-semibold shadow-lg shadow-gold-500/25 transition hover:bg-gold-400"
           aria-label="Open AI assistant"
         >
           AI
@@ -117,11 +136,11 @@ export default function FloatingAssistant() {
             <div className="flex h-full min-h-[400px] flex-col overflow-hidden">
               <div className="flex items-center justify-between border-b border-slate-800/80 bg-slate-950/90 px-5 py-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-teal-500/10 text-teal-300 ring-1 ring-teal-400/20">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-gold-500/10 text-gold-300 ring-1 ring-gold-400/20">
                     <span className="text-sm font-semibold">AI</span>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.35em] text-teal-300">AI Assistant</p>
+                    <p className="text-[10px] uppercase tracking-[0.35em] text-gold-300">AI Assistant</p>
                     <h2 className="text-lg font-semibold text-white">Ask anything, plan everything</h2>
                     <p className="mt-1 text-xs text-slate-400">Type a question or ask for task prioritization.</p>
                   </div>
@@ -139,11 +158,22 @@ export default function FloatingAssistant() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-5 py-4">
-                {loading && (
-                  <div className="rounded-3xl bg-slate-900/80 px-4 py-5 text-sm text-slate-400">Loading the chat assistant…</div>
+                {loading && !messages.length && (
+                  <div className="flex items-center justify-center h-32">
+                    <LoadingSpinner variant="ring" size="md" text="Loading assistant…" />
+                  </div>
                 )}
-                {error && <div className="rounded-3xl bg-rose-500/10 px-4 py-4 text-sm text-rose-200">{error}</div>}
-                {showEmpty ? (
+                {error && (
+                  <div className="mb-3">
+                    <ErrorAlert 
+                      message={error} 
+                      type="error" 
+                      onDismiss={() => setError("")}
+                      autoDismissMs={5000}
+                    />
+                  </div>
+                )}
+                {messages.length === 0 && !loading && !error ? (
                   <div className="rounded-2xl bg-slate-900/80 px-4 py-6 text-sm leading-6 text-slate-300">
                     <div className="flex flex-col gap-3">
                       <div>Start a conversation with the AI. Ask for a plan, deadline rescue, or productivity strategy.</div>
@@ -153,7 +183,7 @@ export default function FloatingAssistant() {
                   <div className="flex flex-col gap-3">
                     {messages.map((message) => (
                       <div key={`${message._id}-${message.createdAt}`} className={`max-w-[90%] ${message.role === "assistant" ? "self-start" : "self-end"}`}>
-                        <div className={`${message.role === "assistant" ? "bg-slate-800 text-slate-100" : "bg-teal-500/10 text-slate-100"} rounded-2xl px-4 py-3 text-sm leading-6`}>
+                        <div className={`${message.role === "assistant" ? "bg-slate-800 text-slate-100" : "bg-gold-500/10 text-slate-100"} rounded-2xl px-4 py-3 text-sm leading-6`}>
                           {message.content}
                         </div>
                         <div className="text-[11px] text-slate-500 mt-1">
@@ -161,6 +191,11 @@ export default function FloatingAssistant() {
                         </div>
                       </div>
                     ))}
+                    {loading && (
+                      <div className="self-start">
+                        <LoadingSpinner variant="dots" size="sm" />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -171,7 +206,7 @@ export default function FloatingAssistant() {
                   <textarea
                     id="assistant-message"
                     rows={4}
-                    className="w-full resize-none rounded-[2rem] border border-slate-800 bg-slate-950/95 px-4 py-4 pr-14 text-sm text-slate-100 outline-none transition duration-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20"
+                    className="w-full resize-none rounded-[2rem] border border-slate-800 bg-slate-950/95 px-4 py-4 pr-14 text-sm text-slate-100 outline-none transition duration-200 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
                     placeholder="What do you want help with today?"
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
@@ -202,7 +237,7 @@ export default function FloatingAssistant() {
                     <button
                       type="submit"
                       disabled={loading || !input.trim()}
-                      className="inline-flex min-w-[130px] items-center justify-center rounded-full bg-teal-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-w-[130px] items-center justify-center rounded-full bg-gold-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Thinking…" : "Send"}
                     </button>

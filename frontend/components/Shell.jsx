@@ -13,6 +13,7 @@ const NAV = [
   { href: "/habits", label: "Habits", icon: "↻" },
   { href: "/calendar", label: "Calendar", icon: "▦" },
   { href: "/integrations", label: "Integrations", icon: "⛓" },
+  { href: "/quick-attender", label: "Quick Attender", icon: "⚡" },
   { href: "/profile", label: "Profile", icon: "☼" },
 ];
 
@@ -36,26 +37,57 @@ export default function Shell({ children }) {
 
   return (
     <div className="min-h-screen flex bg-slate-950 text-slate-100">
-      <aside className="hidden md:flex md:w-72 flex-col border-r border-slate-800 bg-slate-950 px-6 py-6">
-        <div className="space-y-8">
-          <Link href="/dashboard" className="flex items-center gap-4">
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-gold-500 focus:text-slate-950 focus:rounded focus:font-bold"
+      >
+        Skip to main content
+      </a>
+
+      <aside 
+        className="hidden md:flex md:w-72 flex-col border-r border-slate-800 bg-slate-950 px-6 py-6"
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <div className="space-y-3">
+          <Link href="/dashboard" aria-label="Home - Vibe2Ship" className="flex items-center gap-4">
             <Logo />
           </Link>
 
-          <nav className="space-y-2">
-            {NAV.map((item) => {
+          <nav className="space-y-2" aria-label="Navigation menu">
+            {NAV.slice(0, 1).map((item) => {
               const active = pathname?.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-medium transition ${
                     active
-                      ? "bg-slate-900 text-teal-300 shadow-[0_10px_30px_-20px_rgba(16,185,129,0.8)]"
+                      ? "bg-slate-900 text-gold-300 shadow-[0_10px_30px_-20px_rgba(217,165,59,0.8)]"
                       : "text-slate-300 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
-                  <span className="w-6 text-center text-slate-500">{item.icon}</span>
+                  <span className="w-6 text-center text-slate-500" aria-hidden="true">{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            {NAV.slice(1).map((item) => {
+              const active = pathname?.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-medium transition ${
+                    active
+                      ? "bg-slate-900 text-gold-300 shadow-[0_10px_30px_-20px_rgba(217,165,59,0.8)]"
+                      : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <span className="w-6 text-center text-slate-500" aria-hidden="true">{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               );
@@ -65,28 +97,50 @@ export default function Shell({ children }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="md:hidden flex items-center justify-between px-4 py-4 border-b border-slate-800 bg-slate-950">
+        <header 
+          className="md:hidden flex items-center justify-between px-3 py-3 border-b border-slate-800 bg-slate-950"
+          role="banner"
+        >
           <Logo withText={false} />
-          <button onClick={logout} className="text-xs uppercase tracking-[0.2em] text-slate-400 hover:text-white">
+          <button 
+            onClick={logout} 
+            className="text-xs uppercase tracking-[0.2em] text-slate-400 hover:text-white"
+            aria-label="Sign out"
+          >
             Sign out
           </button>
         </header>
-        <nav className="md:hidden flex overflow-x-auto gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950">
+
+        <nav 
+          className="md:hidden flex overflow-x-auto gap-1 px-3 py-2 border-b border-slate-800 bg-slate-950"
+          role="navigation"
+          aria-label="Mobile navigation"
+        >
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-full border border-slate-800 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                pathname?.startsWith(item.href) ? "bg-teal-500/10 text-teal-300" : "text-slate-400 hover:bg-slate-900"
+              aria-current={pathname?.startsWith(item.href) ? "page" : undefined}
+              className={`rounded-full border border-slate-800 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-widest transition whitespace-nowrap ${
+                pathname?.startsWith(item.href) ? "bg-gold-500/10 text-gold-300" : "text-slate-400 hover:bg-slate-900"
               }`}
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <main className="flex-1 p-4 sm:p-8 max-w-6xl w-full mx-auto">{children}</main>
-        <footer className="border-t border-slate-800 bg-slate-950 px-4 py-10">
-          <div className="mx-auto flex max-w-6xl flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+        <main 
+          id="main-content" 
+          className="flex-1 px-3 py-2 sm:p-4 max-w-6xl w-full mx-auto"
+          role="main"
+        >
+          {children}
+        </main>
+        <footer 
+          className="border-t border-slate-800 bg-slate-950 px-3 py-6 sm:px-4 sm:py-10"
+          role="contentinfo"
+        >
+          <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:gap-8 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <Logo withText={false} />
@@ -103,15 +157,15 @@ export default function Shell({ children }) {
               </div>
             </div>
 
-            <div className="grid gap-3 text-sm text-slate-300 sm:w-[320px]">
+            <div className="grid gap-2 text-sm text-slate-300 sm:gap-3 sm:w-[320px]">
               <a
                 href="mailto:finalping70@gmail.com"
-                className="flex items-center gap-3 rounded-3xl bg-white/5 px-4 py-3 transition hover:bg-white/10"
+                className="flex items-center gap-2 sm:gap-3 rounded-2xl sm:rounded-3xl bg-white/5 px-3 sm:px-4 py-2 sm:py-3 transition hover:bg-white/10"
               >
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-400/10 text-teal-300">✉️</span>
-                <div>
-                  <p className="font-medium text-slate-100">Email</p>
-                  <p className="text-slate-400 truncate">finalping70@gmail.com</p>
+                <span className="inline-flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-lg sm:rounded-2xl bg-gold-400/10 text-sm sm:text-base text-gold-300">✉️</span>
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-100 text-xs sm:text-sm">Email</p>
+                  <p className="text-slate-400 truncate text-xs sm:text-sm">finalping70@gmail.com</p>
                 </div>
               </a>
               <a

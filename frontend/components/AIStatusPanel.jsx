@@ -7,27 +7,34 @@ export default function AIStatusPanel({
   description = "See current productivity signals and plan insights based on your tasks.",
 }) {
   const [summary, setSummary] = useState(null);
-  const [report, setReport] = useState("");
+  const [productivityReport, setProductivityReport] = useState("");
+  const [weeklyReview, setWeeklyReview] = useState("");
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingReport, setLoadingReport] = useState(true);
+  const [loadingReview, setLoadingReview] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoadingSummary(true);
       setLoadingReport(true);
+      setLoadingReview(true);
       try {
-        const [summaryRes, reportRes] = await Promise.all([
+        const [summaryRes, reportRes, reviewRes] = await Promise.all([
           api.get("/ai/summary"),
           api.get("/ai/productivity-report"),
+          api.get("/ai/weekly-review"),
         ]);
         setSummary(summaryRes.data.summary || null);
-        setReport(reportRes.data.report || "");
+        setProductivityReport(reportRes.data.report || "");
+        setWeeklyReview(reviewRes.data.review || "");
       } catch (err) {
         setSummary(null);
-        setReport("");
+        setProductivityReport("");
+        setWeeklyReview("");
       } finally {
         setLoadingSummary(false);
         setLoadingReport(false);
+        setLoadingReview(false);
       }
     }
 
@@ -40,7 +47,7 @@ export default function AIStatusPanel({
   return (
     <div className="glass-card min-w-0 overflow-hidden rounded-xl p-5">
       <div className="mb-4">
-        <h3 className="font-display font-semibold text-sm tracking-wide text-teal-300">{title}</h3>
+        <h3 className="font-display font-semibold text-sm tracking-wide text-gold-300">{title}</h3>
         <p className="text-[11px] text-slate-500 mt-1">{description}</p>
       </div>
 
@@ -89,11 +96,19 @@ export default function AIStatusPanel({
         <p className="text-sm text-slate-500">Could not load AI insights right now.</p>
       )}
 
-      <div className="mt-5">
-        <h4 className="font-semibold text-sm text-slate-100 mb-2">Weekly report</h4>
-        <p className="min-h-[5rem] break-words text-sm text-slate-400 leading-relaxed">
-          {loadingReport ? "Summarizing your week…" : report || "No productivity report is available right now."}
-        </p>
+      <div className="mt-5 space-y-4">
+        <div>
+          <h4 className="font-semibold text-sm text-slate-100 mb-2">Weekly productivity report</h4>
+          <p className="min-h-[5rem] break-words text-sm text-slate-400 leading-relaxed">
+            {loadingReport ? "Summarizing your current week…" : productivityReport || "No productivity report is available right now."}
+          </p>
+        </div>
+        <div>
+          <h4 className="font-semibold text-sm text-slate-100 mb-2">Weekly review</h4>
+          <p className="min-h-[5rem] break-words text-sm text-slate-400 leading-relaxed whitespace-pre-line">
+            {loadingReview ? "Generating a weekly review…" : weeklyReview || "No weekly review is available right now."}
+          </p>
+        </div>
       </div>
     </div>
   );
