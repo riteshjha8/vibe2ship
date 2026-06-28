@@ -3,6 +3,8 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { API_URL } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/$/, "") || API_URL;
+
 const SocketContext = createContext(null);
 
 export function SocketProvider({ children }) {
@@ -26,7 +28,7 @@ export function SocketProvider({ children }) {
     import("socket.io-client")
       .then(({ io }) => {
         if (!mounted) return;
-        const socketHost = API_URL || (typeof window !== "undefined" ? window.location.origin : "");
+        const socketHost = SOCKET_URL || (typeof window !== "undefined" ? window.location.origin : "");
         socket = io(socketHost, {
           auth: { token },
           transports: ["websocket", "polling"],

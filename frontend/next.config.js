@@ -7,14 +7,15 @@ const nextConfig = {
     root: path.resolve(__dirname, '..'),
   },
   async rewrites() {
+    const apiHost = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        destination: `${apiHost.replace(/\/$/, '')}/api/:path*`,
       },
       {
         source: '/socket.io/:path*',
-        destination: 'http://localhost:5000/socket.io/:path*',
+        destination: `${apiHost.replace(/\/$/, '')}/socket.io/:path*`,
       },
     ];
   },
