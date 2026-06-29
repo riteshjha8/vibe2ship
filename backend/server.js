@@ -37,17 +37,18 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 const extraAllowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
   : [];
-const allowedOrigins = [
+const defaultAllowedOrigins = [
   CLIENT_URL,
+  "https://vibe2ship-six.vercel.app",
   "http://127.0.0.1:3000",
   "http://localhost:3000",
-  ...extraAllowedOrigins,
-].filter(Boolean);
+];
+const allowedOrigins = [...defaultAllowedOrigins, ...extraAllowedOrigins].filter(Boolean);
 const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || uniqueAllowedOrigins.includes(origin)) {
+    if (!origin || uniqueAllowedOrigins.includes(origin) || extraAllowedOrigins.includes("*")) {
       callback(null, true);
       return;
     }
