@@ -5,6 +5,8 @@ function getSmsConfig() {
     FAST2SMS_API_KEY,
     FAST2SMS_KEY,
     Fast2sms,
+    FAST2SMS_ROUTE,
+    FAST2SMS_SENDER_ID,
   } = process.env;
 
   const fast2smsKey = FAST2SMS_API_KEY || FAST2SMS_KEY || Fast2sms;
@@ -12,6 +14,8 @@ function getSmsConfig() {
     return {
       provider: "fast2sms",
       apiKey: fast2smsKey,
+      route: FAST2SMS_ROUTE || "q",
+      senderId: FAST2SMS_SENDER_ID || undefined,
     };
   }
 
@@ -36,19 +40,27 @@ function formatNumberForProvider(normalizedNumber) {
   return normalizedNumber;
 }
 
-async function sendViaFast2SMS({ apiKey, to, body }) {
-  const payload = JSON.stringify({
+async function sendViaFast2SMS({ apiKey, to, body, route, senderId }) {
+  const payload = {
     message: body,
     language: "english",
-    route: "q",
+    route: route || "q",
     numbers: to,
-  });
+  };
+
+  if (senderId) {
+    payload.sender_id = senderId;
+  }
 
   console.log("[Fast2SMS] sending", {
     to,
     body: body?.slice(0, 160),
     apiKey: apiKey ? `${apiKey.slice(0, 6)}...` : undefined,
+    route: payload.route,
+    sender_id: senderId,
   });
+
+  const dataString = JSON.stringify(payload);
 
   return new Promise((resolve) => {
     const options = {
@@ -59,7 +71,7 @@ async function sendViaFast2SMS({ apiKey, to, body }) {
       headers: {
         "Content-Type": "application/json",
         authorization: apiKey,
-        "Content-Length": Buffer.byteLength(payload),
+        "Content-Length": Buffer.byteLength(dataString),
       },
     };
 
@@ -88,7 +100,7 @@ async function sendViaFast2SMS({ apiKey, to, body }) {
     });
 
     req.on("error", (err) => resolve({ sent: false, error: err.message }));
-    req.write(payload);
+    req.write(dataString);
     req.end();
   });
 }
@@ -102,7 +114,7 @@ async function sendSMS({ to, body }) {
   if (!normalizedTo) return { sent: false, error: "Unable to normalize destination number" };
   const formattedTo = formatNumberForProvider(normalizedTo);
 
-  return sendViaFast2SMS({ apiKey: config.apiKey, to: formattedTo, body });
+  return sendViaFast2SMS({ apiKey: config.apiKey, to: formattedTo, body, route: config.route, senderId: config.senderId });
 }
 
 export { sendSMS };

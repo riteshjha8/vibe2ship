@@ -26,6 +26,40 @@ function unlockAudioOnce() {
   } catch {}
 }
 
+function showBrowserNotification(payload) {
+  if (typeof window === "undefined" || typeof Notification === "undefined") return;
+  if (Notification.permission === "denied") return;
+
+  const dispatchNotification = () => {
+    try {
+      new Notification(payload.title, {
+        body: payload.message,
+        tag: `v2s-reminder-${payload.taskId}-${payload.ringType}`,
+        silent: false,
+      });
+    } catch {}
+  };
+
+  if (Notification.permission === "granted") {
+    dispatchNotification();
+    return;
+  }
+
+  Notification.requestPermission().then((permission) => {
+    if (permission === "granted") {
+      dispatchNotification();
+    }
+  });
+}
+
+function vibrateAlert() {
+  try {
+    if (navigator?.vibrate) {
+      navigator.vibrate([200, 100, 200]);
+    }
+  } catch {}
+}
+
 function playRing(beepCount, frequency = 880) {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -96,6 +130,8 @@ export default function ReminderOverlay() {
     try {
       unlockAudioOnce();
     } catch {}
+    showBrowserNotification(current);
+    vibrateAlert();
 
     const frequency = current.ringType === "1m" ? 1200 : current.ringType === "5m" ? 1000 : current.ringType === "1h" ? 920 : current.ringType === "30m" ? 900 : 760;
     const duration = current.ringType === "1m" ? 90_000 : 60_000;

@@ -118,6 +118,17 @@ async function summarizeChatSession(req, res) {
   res.json({ session, summary });
 }
 
+async function deleteChatSession(req, res) {
+  const session = await ChatSession.findOne({ _id: req.params.sessionId, user: req.userId });
+  if (!session) return res.status(404).json({ message: "Chat session not found." });
+
+  await Message.deleteMany({ session: session._id });
+  await ConversationSummary.deleteMany({ user: req.userId, session: session._id });
+  await ChatSession.deleteOne({ _id: session._id });
+
+  res.json({ message: "Chat session deleted." });
+}
+
 async function listMemories(req, res) {
   const memories = await Memory.find({ user: req.userId }).sort({ createdAt: -1 });
   res.json({ memories });
@@ -164,6 +175,7 @@ export {
   getSessionMessages,
   postChatMessage,
   summarizeChatSession,
+  deleteChatSession,
   listMemories,
   addMemory,
   listInsights,

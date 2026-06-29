@@ -26,6 +26,7 @@ export default function FloatingAssistant() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [deletingSession, setDeletingSession] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -101,11 +102,29 @@ export default function FloatingAssistant() {
     }
   }
 
+  async function deleteSession() {
+    if (!session) return;
+    if (!window.confirm("Delete this chat history? This cannot be undone.")) return;
+    setDeletingSession(true);
+    setError("");
+    try {
+      await api.delete(`/chat/sessions/${session._id}`);
+      setSession(null);
+      setMessages([]);
+    } catch (err) {
+      const errMsg = getErrorMessage(err);
+      setError(errMsg);
+      logError("FloatingAssistant.deleteSession", err);
+    } finally {
+      setDeletingSession(false);
+    }
+  }
+
   if (!isReady) return null;
 
   const isMobile = viewportWidth > 0 ? viewportWidth < 640 : false;
   const panelWidth = isMobile ? Math.min(window.innerWidth - 32, 560) : 520;
-  const panelHeight = isMobile ? Math.min(window.innerHeight - 120, 760) : 720;
+  const panelHeight = isMobile ? Math.min(window.innerHeight - 120, 520) : 520;
   const panelStyle = isMobile
     ? { left: 16, right: 16, bottom: 16, height: panelHeight }
     : { width: panelWidth, right: 24, bottom: 24, height: panelHeight };
@@ -122,7 +141,7 @@ export default function FloatingAssistant() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gold-500 text-ink font-semibold shadow-lg shadow-gold-500/25 transition hover:bg-gold-400"
+          className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gold-500 text-ink font-semibold shadow-lg shadow-gold-500/25 transition hover:bg-gold-400"
           aria-label="Open AI assistant"
         >
           AI
@@ -140,21 +159,32 @@ export default function FloatingAssistant() {
                     <span className="text-sm font-semibold">AI</span>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.35em] text-gold-300">AI Assistant</p>
+                    <p className="text-[10px] uppercase tracking-[0.35em] text-gold-300">Cohere Assistant</p>
                     <h2 className="text-lg font-semibold text-white">Ask anything, plan everything</h2>
                     <p className="mt-1 text-xs text-slate-400">Type a question or ask for task prioritization.</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close assistant"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/90 text-slate-200 transition hover:bg-slate-800"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={deleteSession}
+                    disabled={deletingSession}
+                    aria-label="Delete chat history"
+                    className="rounded-full border border-slate-800 bg-slate-900/90 px-3 py-2 text-xs text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {deletingSession ? "Deleting…" : "Delete chat"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    aria-label="Close assistant"
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/90 text-slate-200 transition hover:bg-slate-800"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto px-5 py-4">

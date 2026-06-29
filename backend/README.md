@@ -63,7 +63,7 @@ EMAIL_PORT=<smtp-port>
 EMAIL_USER=<smtp-user>
 EMAIL_PASS=<smtp-pass>
 SMS_API_KEY=<sms-provider-api-key>
-COHERE_API_KEY=<cohere-api-key>
+COHERE_KEY=<cohere-api-key>
 ```
 
 ## Local Development

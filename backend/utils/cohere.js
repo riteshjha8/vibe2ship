@@ -3,9 +3,18 @@ import { DateTime } from "luxon";
 
 const COHERE_MODEL = process.env.COHERE_MODEL || "command-a-03-2025";
 let client = null;
+function getCohereKey() {
+  return process.env.COHERE_KEY;
+}
 function getClient() {
-  if (!process.env.COHERE_KEY) return null;
-  if (!client) client = new CohereClient({ token: process.env.COHERE_KEY });
+  const cohereKey = getCohereKey();
+  if (!cohereKey) {
+    if (!client) {
+      console.warn("Cohere API key is missing: set COHERE_KEY in backend/.env");
+    }
+    return null;
+  }
+  if (!client) client = new CohereClient({ token: cohereKey });
   return client;
 }
 
@@ -24,16 +33,19 @@ async function askCohere(message, { preamble, jsonMode = false } = {}) {
   if (!c) return null;
   try {
     const messages = [];
-    if (preamble) {
-      messages.push({ role: "system", content: preamble });
-    }
+    // default system preamble to enforce persona if none provided
+    const defaultPreamble =
+      "You are a world-class AI assistant, concise, expert, and helpful. Answer as a top-tier chatbot: prioritize clarity, give a one-line recommendation followed by 3 prioritized action steps when relevant, avoid hallucination, and ask for clarification when details are missing.";
+    messages.push({ role: "system", content: preamble || defaultPreamble });
     messages.push({ role: "user", content: message });
 
+    console.log("[askCohere] sending chat request", { model: COHERE_MODEL, messagesLength: messages.length });
     const response = await c.v2.chat({
       model: COHERE_MODEL,
       messages,
       temperature: 0.4,
     });
+    console.log("[askCohere] cohere response received", { hasMessage: !!response?.message, messageTypes: response?.message?.content?.map?.((i) => i.type) });
 
     const text = (response?.message?.content || [])
       .filter((item) => item.type === "text" && typeof item.text === "string")
@@ -62,6 +74,11 @@ async function askCohere(message, { preamble, jsonMode = false } = {}) {
     return text || null;
   } catch (err) {
     console.error("Cohere request failed:", err?.message || err);
+    try {
+      if (err?.response) console.error("Cohere response object:", JSON.stringify(err.response, Object.getOwnPropertyNames(err.response)));
+    } catch (e) {
+      console.error("Failed to stringify Cohere error response", e?.message || e);
+    }
     if (err?.response?.data) {
       console.error("Cohere response details:", err.response.data);
     }
@@ -103,9 +120,17 @@ function normalizeReplyText(text = "") {
   return text.toLowerCase().trim();
 }
 
+function isSimpleGreeting(message = "") {
+  const normalized = normalizeReplyText(message).replace(/[!?.]+$/, "").trim();
+  return /^(hi|hello|hey|hii|hyy|yo|sup)( there| friend| everyone| all| team)?$/i.test(normalized) ||
+    /^(good morning|good afternoon|good evening)( there| friend| everyone| all| team)?$/i.test(normalized);
+}
+
 function looksLikeGreeting(message = "") {
-  const normalized = normalizeReplyText(message);
-  return /^(hi|hello|hey|hii|hyy|hey there|hello there|good morning|good afternoon|good evening|yo|sup)$/i.test(normalized) || /^(hi|hello|hey|hii|hyy|hey there|hello there|good morning|good afternoon|good evening|yo|sup)\b/.test(normalized);
+  const normalized = normalizeReplyText(message).replace(/[!?.]+$/, "").trim();
+  if (isSimpleGreeting(normalized)) return true;
+  return /^(hi|hello|hey|hii|hyy|yo|sup|good morning|good afternoon|good evening)\b/i.test(normalized) &&
+    normalized.split(/\s+/).length <= 3;
 }
 
 function classifyReplyTopic(message = "") {
@@ -154,12 +179,16 @@ function buildLocalAssistantReply(history = []) {
     ].join("\n");
   }
 
-  return [
-    "Here’s a practical approach:",
-    "- Break the task into smaller steps so it feels more manageable.",
-    "- Prioritize the most urgent item first and set a clear deadline for each step.",
-    "- Keep a short progress check-in so you can adjust quickly if anything slips.",
-  ].join("\n");
+  if (topic === "task") {
+    return [
+      "Start with the one task that will give you the most momentum.",
+      "- Choose the task with the nearest deadline or highest consequence.",
+      "- Break it into three small next steps you can finish in under 30 minutes.",
+      "- Remove one distraction and begin the first step immediately.",
+    ].join("\n");
+  }
+
+  return "I’m sorry, I’m not able to access the AI assistant right now. Please try again in a moment.";
 }
 
 function buildContextSummary({ tasks = [], goals = [], habits = [], alerts = [], memories = [], summaries = [], preferences = {} } = {}) {
@@ -474,31 +503,33 @@ ${inputBlock}`,
 }
 
 async function generateAssistantResponse(history, userName, sessionTitle, context = {}) {
-  const localReply = buildLocalAssistantReply(history);
-  if (localReply) {
-    return localReply;
-  }
-
   const historyText = history
     .map((message) => `${message.role === "user" ? "User" : message.role === "assistant" ? "Assistant" : "System"}: ${message.content}`)
     .join("\n");
   const contextText = buildContextSummary(context);
-  const prompt = `You are LastMinute AI's intelligent productivity assistant for ${userName}. This is not a generic chatbot. Use only the authenticated user data provided here and do not hallucinate or invent facts.
 
-You have visibility into the user's current tasks, goals, habits, reminders, calendar, productivity statistics, deadlines, previous conversations, and preferences. Analyze those items to provide highly personalized, actionable guidance.
+  // Debug: log incoming user message and context summary for troubleshooting
+  try {
+    const latestUser = [...history].reverse().find((m) => m?.role === "user")?.content || "";
+    console.log("[generateAssistantResponse] latestUser=", latestUser);
+    console.log("[generateAssistantResponse] contextSummary=", contextText ? contextText.slice(0, 800) : "<none>");
+  } catch (e) {
+    console.error("[generateAssistantResponse] debug log failed", e?.message || e);
+  }
 
-Always do the following when responding:
-- Write in a calm, polished, supportive tone that feels natural and modern, like a trusted AI assistant.
-- Keep replies concise, warm, and easy to scan, using short paragraphs or bullets when helpful.
-- Tailor the guidance to this product’s purpose: productivity, habits, goals, deadlines, health, finance, study, and work planning.
-- Calculate task priority using deadline, urgency, importance, estimated completion time, dependencies, workload, and user schedule.
-- Recommend the next best task to work on and explain why.
-- Suggest productive habits and recurring routines based on the user's routine.
-- Generate SMART goals when asked, and propose realistic next steps.
-- Detect scheduling conflicts, predict missed deadlines, and offer rescheduling or recovery advice.
-- Provide health-aware productivity advice such as hydration, breaks, posture, sleep, and stress management when relevant.
-- Be proactive: identify problems before they occur and recommend solutions without waiting to be asked.
-- Confirm before suggesting destructive actions such as deleting or overwriting data.
+  // Strong system prompt to steer the assistant to produce a one-line recommendation
+  // followed by clear action steps and a short rationale. We also instruct the model
+  // to avoid repetition and to expand if the initial answer is too terse.
+  const basePrompt = `You are the Cohere-powered LastMinute Assistant for ${userName}. Act as an expert, pragmatic advisor with broad domain knowledge and deep experience in urgent deadline rescue. Use ONLY the authenticated user context (tasks, goals, habits, reminders, calendar, preferences). Do NOT invent facts or make unsupported medical, legal, or financial claims; when a question requires licensed advice, recommend a qualified professional.
+
+Persona and style:
+- Be concise, decisive, and empathetic. Start with a single-line top recommendation (one sentence), then provide 3 to 6 prioritized, actionable steps. End with a one-line "Why" explaining the top recommendation.
+- When domain-specific guidance is requested, provide step-by-step actions and explicit next-steps the user can take in the next 5-30 minutes.
+
+Behavior rules:
+- Use only the supplied user context; avoid hallucination.
+- If details are missing, ask a single clarifying question and offer a safe fallback plan.
+- If the user asks for something outside the assistant's scope (medical emergency, legal advice, financial transactions), give a safe disclaimer and recommend a qualified professional.
 
 Productivity context:
 ${contextText}
@@ -506,8 +537,86 @@ ${contextText}
 Conversation history:
 ${historyText}
 
-Respond as the assistant in one concise, polished message. If the user asked a question, answer it directly. If the user requested planning help, give short actionable steps. Keep the answer practical, specific, and reassuring.`;
-  const result = await askCohere(prompt);
+Respond as the assistant in a clear, human-friendly message following the required structure: 1) one-line recommendation, 2) numbered or bulleted action steps (3-6 items), 3) one-line "Why". Avoid repeating earlier assistant messages. Do not include system or internal notes.`;
+
+  const latestUserMessage = [...history].reverse().find((m) => m?.role === "user")?.content || "";
+  const latestUserIsGreeting = looksLikeGreeting(latestUserMessage);
+  const localGreeting = buildLocalAssistantReply(history);
+
+  // If the user just said hello, reply locally and skip the Cohere call.
+  if (latestUserIsGreeting && localGreeting) {
+    return localGreeting;
+  }
+
+  const hasCohereKey = Boolean(getCohereKey());
+  let result = null;
+
+  if (hasCohereKey) {
+    let retryAllowed = true;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        console.log("[generateAssistantResponse] calling Cohere, attempt", attempt + 1);
+        result = await askCohere(attempt === 0 ? basePrompt : `${basePrompt}\n\nDo not respond with a greeting. Answer the user's question directly with clear, actionable advice in the required format.`);
+        console.log("[generateAssistantResponse] cohere result length=", result ? String(result).length : 0);
+      } catch (e) {
+        console.error("[generateAssistantResponse] cohere call error:", e?.message || e);
+        result = null;
+      }
+
+      const latestUser = normalizeReplyText(latestUserMessage);
+      if (typeof result === "string" && looksLikeGreeting(result) && latestUser && !looksLikeGreeting(latestUser)) {
+        console.warn("[generateAssistantResponse] detected greeting-like model reply for non-greeting input; retrying if allowed.");
+        result = null;
+        if (!retryAllowed) break;
+        retryAllowed = false;
+        continue;
+      }
+      break;
+    }
+
+    const isShort = !result || (typeof result === "string" && result.trim().length < 40);
+    const lastAssistant = Array.isArray(history) ? [...history].reverse().find((m) => m.role === "assistant") : null;
+    const repeatsLast = lastAssistant && result && typeof result === "string" && lastAssistant.content && result.trim() === lastAssistant.content.trim();
+
+    if ((isShort || repeatsLast) && !latestUserIsGreeting) {
+      try {
+        const expandPrompt = `${basePrompt}\n\nThe previous reply was too short or repetitive. Please expand the assistant's reply now into the required format: one-line recommendation, then 3-6 numbered action steps, then a one-line \"Why\". Be specific and avoid repetition. If you cannot expand safely, say so.`;
+        console.log("[generateAssistantResponse] attempting expansion prompt");
+        const expanded = await askCohere(expandPrompt);
+        console.log("[generateAssistantResponse] expanded length=", expanded ? String(expanded).length : 0);
+        if (expanded && typeof expanded === "string" && expanded.trim().length > 20) {
+          result = expanded;
+        }
+      } catch (e) {
+        console.error("Assistant expansion attempt failed:", e?.message || e);
+        result = null;
+      }
+    }
+
+    if (typeof result === "string" && looksLikeGreeting(result) && latestUser && !looksLikeGreeting(latestUser)) {
+      console.warn("[generateAssistantResponse] expanded response still greeting-like; discarding result.");
+      result = null;
+    }
+  } else {
+    console.warn("[generateAssistantResponse] no Cohere API key available; using local fallback.");
+  }
+
+  if (!result) {
+    const fallback = buildLocalAssistantReply(history);
+    if (fallback) {
+      console.warn("[generateAssistantResponse] using hard-coded fallback reply.");
+      return fallback;
+    }
+    return "I’m sorry, I can’t access the AI assistant right now. Please try again in a moment.";
+  }
+
+  // Debug: final result preview
+  try {
+    console.log("[generateAssistantResponse] finalResultPreview=", (result && typeof result === 'string' ? result.slice(0, 400) : String(result)));
+  } catch (e) {
+    /* ignore */
+  }
+
   return result;
 }
 

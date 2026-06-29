@@ -58,6 +58,24 @@ function parseThresholdKey(key) {
   };
 }
 
+function isMongooseMap(value) {
+  return value && typeof value === "object" && typeof value.get === "function" && typeof value.set === "function";
+}
+
+function getThresholdSent(container, key) {
+  if (!container || !key) return false;
+  return isMongooseMap(container) ? !!container.get(key) : !!container[key];
+}
+
+function markThresholdSent(container, key) {
+  if (!container || !key) return;
+  if (isMongooseMap(container)) {
+    container.set(key, true);
+    return;
+  }
+  container[key] = true;
+}
+
 function taskThresholds(task) {
   const keys = Array.isArray(task.reminderThresholds) && task.reminderThresholds.length ? task.reminderThresholds : DEFAULT_THRESHOLDS;
   return keys
@@ -455,7 +473,7 @@ function startReminderScheduler(io) {
         // Check threshold-based reminders. If the scheduler missed the exact tick, fire when the
         // current window has crossed the threshold but the deadline has not passed.
         for (const threshold of thresholds) {
-          const alreadySent = task.remindersSent?.get?.(threshold.key) || task.remindersSent?.[threshold.key];
+          const alreadySent = getThresholdSent(task.remindersSent, threshold.key);
           if (
             !alreadySent &&
             msLeft > 0 &&
@@ -463,7 +481,7 @@ function startReminderScheduler(io) {
             previousMsLeft > threshold.ms
           ) {
             task.remindersSent = task.remindersSent || {};
-            task.remindersSent[threshold.key] = true;
+            markThresholdSent(task.remindersSent, threshold.key);
             await fireReminder(io, task, task.user, threshold);
           }
         }
@@ -515,10 +533,10 @@ function startReminderScheduler(io) {
         const previousMsLeft = msLeft + 70 * 1000;
 
         for (const threshold of thresholds) {
-          const alreadySent = meeting.remindersSent?.get?.(threshold.key) || meeting.remindersSent?.[threshold.key];
+          const alreadySent = getThresholdSent(meeting.remindersSent, threshold.key);
           if (!alreadySent && msLeft > 0 && msLeft <= threshold.ms && previousMsLeft > threshold.ms) {
             meeting.remindersSent = meeting.remindersSent || {};
-            meeting.remindersSent[threshold.key] = true;
+            markThresholdSent(meeting.remindersSent, threshold.key);
             await fireMeetingReminder(io, meeting, meeting.user, threshold);
           }
         }

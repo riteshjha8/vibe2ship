@@ -33,24 +33,28 @@ function initSocket(io) {
   });
 }
 
-function emitToUser(ioOrUserId, maybeUserId, event, payload) {
+function emitToUser(ioOrUserId, maybeUserId, maybeEvent, maybePayload) {
   // Flexible signature:
-  // - emitToUser(io, userId, event, payload) (existing usage)
-  // - emitToUser(userId, event, payload) (convenience: uses stored io instance)
+  // - emitToUser(io, userId, event, payload)
+  // - emitToUser(userId, event, payload)
 
   let io = null;
   let userId = null;
+  let event = null;
+  let payload = null;
+
   if (ioOrUserId && typeof ioOrUserId === "object" && typeof ioOrUserId.to === "function") {
     // first arg is io
     io = ioOrUserId;
     userId = maybeUserId;
+    event = maybeEvent;
+    payload = maybePayload;
   } else {
     // first arg is userId, use stored ioInstance
     io = ioInstance;
     userId = ioOrUserId;
-    // shift parameters when called as (userId, event, payload)
     event = maybeUserId;
-    payload = event === undefined ? payload : payload; // keep shape; actual values passed in by caller
+    payload = maybeEvent;
   }
 
   if (!io) return false;

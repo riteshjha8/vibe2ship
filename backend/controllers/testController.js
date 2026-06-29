@@ -1,4 +1,5 @@
 import { sendSMS } from "../utils/sms.js";
+import { generateAssistantResponse } from "../utils/cohere.js";
 
 async function sendTestSMS(req, res) {
   try {
@@ -9,10 +10,40 @@ async function sendTestSMS(req, res) {
     const result = await sendSMS({ to, body: message });
     console.log("[sendTestSMS] result", result);
     return res.json({ result });
-  } catch (err) {
+    } catch (err) {
     console.error("sendTestSMS error:", err);
     return res.status(500).json({ error: err.message || String(err) });
   }
 }
+ 
 
-export { sendTestSMS };
+async function generateTestAssistant(req, res) {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Provide 'prompt' in JSON body" });
+
+    // Build a minimal fake history and context for testing
+    const history = [{ role: "user", content: prompt }];
+    const userName = "Tester";
+    const sessionTitle = "Test Session";
+
+    const reply =
+      (await generateAssistantResponse(history, userName, sessionTitle, {
+        tasks: [],
+        goals: [],
+        habits: [],
+        alerts: [],
+        memories: [],
+        summaries: [],
+        preferences: {},
+      })) || null;
+
+    const cohereKeyPresent = !!process.env.COHERE_KEY;
+    return res.json({ reply, cohereKeyPresent });
+  } catch (err) {
+    console.error("generateTestAssistant error:", err);
+    return res.status(500).json({ error: err.message || String(err) });
+  }
+}
+
+export { sendTestSMS, generateTestAssistant };

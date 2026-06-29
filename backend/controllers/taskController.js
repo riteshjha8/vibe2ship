@@ -103,13 +103,17 @@ async function createTask(req, res) {
       if (k === "24h") return 24 * 60 * 60 * 1000;
       return Infinity;
     };
-    const smallestMs = Math.min(...thresholds.map(toMs));
-    if (msLeft >= 0 && msLeft <= smallestMs) {
+    const normalizedThresholds = thresholds
+      .map((key) => ({ key, ms: toMs(key) }))
+      .filter((item) => item.ms < Infinity)
+      .sort((a, b) => a.ms - b.ms);
+    const smallestThreshold = normalizedThresholds[0] || { key: "1m", ms: 60 * 1000 };
+    if (msLeft >= 0 && msLeft <= smallestThreshold.ms) {
       // Build a minimal payload similar to reminderScheduler.fireReminder
       const payload = {
         taskId: task._id,
         title: task.title,
-        ringType: thresholds[thresholds.length - 1] || "1m",
+        ringType: smallestThreshold.key,
         message: `Reminder: ${task.title} is due soon.`,
         deadline: task.deadline,
         timeLeft: null,
@@ -117,8 +121,7 @@ async function createTask(req, res) {
       };
       // mark the smallest threshold as sent to avoid duplicate firing by scheduler
       task.remindersSent = task.remindersSent || {};
-      const smallestKey = thresholds[thresholds.length - 1] || "1m";
-      task.remindersSent[smallestKey] = true;
+      task.remindersSent[smallestThreshold.key] = true;
       await task.save();
       // emit using stored io instance
       emitToUser(task.user, "task:reminder", payload);

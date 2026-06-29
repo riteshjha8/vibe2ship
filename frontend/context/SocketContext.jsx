@@ -33,10 +33,16 @@ export function SocketProvider({ children }) {
           auth: { token },
           transports: ["websocket", "polling"],
           path: "/socket.io",
+          reconnection: true,
+          reconnectionAttempts: Infinity,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
+          timeout: 10000,
         });
         socketRef.current = socket;
 
         socket.on("connect", () => console.debug("socket connected", socket.id));
+        socket.on("connect_error", (error) => console.debug("socket connect_error", error?.message || error));
         socket.on("disconnect", (reason) => console.debug("socket disconnected", reason));
         socket.on("task:reminder", (payload) => {
           console.debug("socket event: task:reminder", payload);
