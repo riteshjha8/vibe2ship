@@ -5,11 +5,12 @@ function getSmsConfig() {
     FAST2SMS_API_KEY,
     FAST2SMS_KEY,
     Fast2sms,
+    SMS_API_KEY,
     FAST2SMS_ROUTE,
     FAST2SMS_SENDER_ID,
   } = process.env;
 
-  const fast2smsKey = FAST2SMS_API_KEY || FAST2SMS_KEY || Fast2sms;
+  const fast2smsKey = FAST2SMS_API_KEY || FAST2SMS_KEY || SMS_API_KEY || Fast2sms;
   if (fast2smsKey) {
     return {
       provider: "fast2sms",

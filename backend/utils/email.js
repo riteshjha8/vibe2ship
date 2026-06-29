@@ -44,9 +44,13 @@ function buildTransportOptions() {
 
   return {
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
+    requireTLS: true,
     ...base,
+    tls: {
+      rejectUnauthorized: process.env.EMAIL_TLS_REJECT_UNAUTHORIZED?.toLowerCase() !== "false",
+    },
   };
 }
 
