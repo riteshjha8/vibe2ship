@@ -34,11 +34,20 @@ const app = express();
 const server = http.createServer(app);
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
-const allowedOrigins = [CLIENT_URL, "http://127.0.0.1:3000", "http://localhost:3000"];
+const extraAllowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+  : [];
+const allowedOrigins = [
+  CLIENT_URL,
+  "http://127.0.0.1:3000",
+  "http://localhost:3000",
+  ...extraAllowedOrigins,
+].filter(Boolean);
+const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || uniqueAllowedOrigins.includes(origin)) {
       callback(null, true);
       return;
     }
