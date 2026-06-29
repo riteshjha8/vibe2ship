@@ -10,11 +10,14 @@ function getClient() {
   const cohereKey = getCohereKey();
   if (!cohereKey) {
     if (!client) {
-      console.warn("Cohere API key is missing: set COHERE_KEY in backend/.env");
+      console.warn("Cohere API key is missing: set COHERE_KEY in backend/.env or deployment environment");
     }
     return null;
   }
-  if (!client) client = new CohereClient({ token: cohereKey });
+  if (!client) {
+    console.log("Cohere API key detected: creating Cohere client from environment.");
+    client = new CohereClient({ token: cohereKey });
+  }
   return client;
 }
 
@@ -35,7 +38,7 @@ async function askCohere(message, { preamble, jsonMode = false } = {}) {
     const messages = [];
     // default system preamble to enforce persona if none provided
     const defaultPreamble =
-      "You are a world-class AI assistant, concise, expert, and helpful. Answer as a top-tier chatbot: prioritize clarity, give a one-line recommendation followed by 3 prioritized action steps when relevant, avoid hallucination, and ask for clarification when details are missing.";
+      "You are a world-class AI assistant with a pro Gemini mindset. Reply like the best LLM model: expert, practical, friendly, and task-focused. You are the user's best task reminder, offering clear suggestions, alerts, and tips for what to do next. Speak naturally when appropriate, including greetings like 'hi', 'hello', 'good morning', 'thank you', and 'welcome', while still delivering sharp productivity advice and concrete next steps.";
     messages.push({ role: "system", content: preamble || defaultPreamble });
     messages.push({ role: "user", content: message });
 
@@ -126,6 +129,22 @@ function isSimpleGreeting(message = "") {
     /^(good morning|good afternoon|good evening)( there| friend| everyone| all| team)?$/i.test(normalized);
 }
 
+function isExpressionOfGratitude(message = "") {
+  const normalized = normalizeReplyText(message).replace(/[!?.]+$/, "").trim();
+  return /^(thank you|thanks|thankyou|thx|ty|thank you so much|thanks a lot|thank you very much|many thanks)\b/i.test(normalized);
+}
+
+function getRandomGratitudeReply() {
+  const replies = [
+    "Most welcome! What I suggest next is picking one small task you can finish in the next 15 minutes.",
+    "Most welcome! If you'd like, I can help you choose the next best task to take action on.",
+    "Most welcome! Let’s decide the next step: finish the nearest deadline task or make a small advance on a big goal.",
+    "Most welcome! I can recommend the next practical thing to do — tell me the task you want to move forward with.",
+    "Most welcome! Focus on one quick win now, and I’ll help you plan the next one after that.",
+  ];
+  return replies[Math.floor(Math.random() * replies.length)];
+}
+
 function looksLikeGreeting(message = "") {
   const normalized = normalizeReplyText(message).replace(/[!?.]+$/, "").trim();
   if (isSimpleGreeting(normalized)) return true;
@@ -141,7 +160,7 @@ function classifyReplyTopic(message = "") {
   if (/(assignment|assignments|homework|project|study|exam|deadline|deadlines|late|due date|submission|report|task|tasks|schedule|planning)/.test(normalized)) {
     return "task";
   }
-  if (/(health|fitness|sleep|exercise|diet|wellness|hydration|stress|mental health|medicine)/.test(normalized)) {
+  if (/(health|fitness|sleep|exercise|gym|workout|training|diet|wellness|hydration|stress|mental health|medicine)/.test(normalized)) {
     return "health";
   }
   return null;
@@ -151,11 +170,11 @@ function buildLocalAssistantReply(history = []) {
   const latestUserMessage = [...history].reverse().find((message) => message?.role === "user" && typeof message?.content === "string" && message.content.trim());
   const message = latestUserMessage?.content || "";
   if (!message.trim()) {
-    return "Hello! I’m here to help. What would you like assistance with?";
+    return "Hi there! I’m your task reminder and productivity assistant. What would you like help with today?";
   }
 
   if (looksLikeGreeting(message)) {
-    return "Hello! I’m here to help. What would you like to tackle today?";
+    return "Hello! I’m here to help — I can give you reminders, alerts, tips, and next steps. What would you like to work on today?";
   }
 
   const topic = classifyReplyTopic(message);
@@ -188,7 +207,12 @@ function buildLocalAssistantReply(history = []) {
     ].join("\n");
   }
 
-  return "I’m sorry, I’m not able to access the AI assistant right now. Please try again in a moment.";
+  return [
+    "Focus on the next small move that moves your work forward.",
+    "- Pick one task you can complete or meaningfully advance in under 30 minutes.",
+    "- Break it into the smallest possible next step and do that first.",
+    "- Remove one distraction and keep the first block short so momentum builds.",
+  ].join("\n");
 }
 
 function buildContextSummary({ tasks = [], goals = [], habits = [], alerts = [], memories = [], summaries = [], preferences = {} } = {}) {
@@ -520,11 +544,12 @@ async function generateAssistantResponse(history, userName, sessionTitle, contex
   // Strong system prompt to steer the assistant to produce a one-line recommendation
   // followed by clear action steps and a short rationale. We also instruct the model
   // to avoid repetition and to expand if the initial answer is too terse.
-  const basePrompt = `You are the Cohere-powered LastMinute Assistant for ${userName}. Act as an expert, pragmatic advisor with broad domain knowledge and deep experience in urgent deadline rescue. Use ONLY the authenticated user context (tasks, goals, habits, reminders, calendar, preferences). Do NOT invent facts or make unsupported medical, legal, or financial claims; when a question requires licensed advice, recommend a qualified professional.
+  const basePrompt = `You are the Cohere-powered LastMinute Assistant for ${userName}. Think like a pro Gemini model and reply like the best LLM: expert, practical, confident, and conversational when it fits. You are the user's best task reminder — deliver suggestions, alerts, tips, and concrete next actions. Use ONLY the authenticated user context (tasks, goals, habits, reminders, calendar, preferences). Do NOT invent facts or make unsupported medical, legal, or financial claims; when a question requires licensed advice, recommend a qualified professional.
 
 Persona and style:
-- Be concise, decisive, and empathetic. Start with a single-line top recommendation (one sentence), then provide 3 to 6 prioritized, actionable steps. End with a one-line "Why" explaining the top recommendation.
-- When domain-specific guidance is requested, provide step-by-step actions and explicit next-steps the user can take in the next 5-30 minutes.
+- Be friendly and natural when the user greets you. You can say “hi”, “hello”, “good morning”, “thank you”, or “welcome” naturally while still staying focused.
+- Be concise, decisive, and empathetic. Start with a single-line top recommendation or summary, then provide 3 to 6 prioritized, actionable steps. End with a one-line "Why" explaining the top recommendation.
+- Offer suggestions, alerts, and tips about what the user should do next, especially when they ask for guidance on tasks, plans, reminders, or productivity.
 
 Behavior rules:
 - Use only the supplied user context; avoid hallucination.
@@ -546,6 +571,10 @@ Respond as the assistant in a clear, human-friendly message following the requir
   // If the user just said hello, reply locally and skip the Cohere call.
   if (latestUserIsGreeting && localGreeting) {
     return localGreeting;
+  }
+
+  if (isExpressionOfGratitude(latestUserMessage)) {
+    return getRandomGratitudeReply();
   }
 
   const hasCohereKey = Boolean(getCohereKey());

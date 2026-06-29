@@ -1,5 +1,5 @@
 import { sendSMS } from "../utils/sms.js";
-import { generateAssistantResponse } from "../utils/cohere.js";
+import { generateAssistantResponse, buildLocalAssistantReply } from "../utils/cohere.js";
 
 async function sendTestSMS(req, res) {
   try {
@@ -27,6 +27,7 @@ async function generateTestAssistant(req, res) {
     const userName = "Tester";
     const sessionTitle = "Test Session";
 
+    const fallbackReply = buildLocalAssistantReply(history);
     const reply =
       (await generateAssistantResponse(history, userName, sessionTitle, {
         tasks: [],
@@ -39,7 +40,8 @@ async function generateTestAssistant(req, res) {
       })) || null;
 
     const cohereKeyPresent = !!process.env.COHERE_KEY;
-    return res.json({ reply, cohereKeyPresent });
+    const usedFallback = reply === fallbackReply || reply === "I’m sorry, I can’t access the AI assistant right now. Please try again in a moment.";
+    return res.json({ reply, cohereKeyPresent, usedFallback });
   } catch (err) {
     console.error("generateTestAssistant error:", err);
     return res.status(500).json({ error: err.message || String(err) });
