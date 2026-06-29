@@ -33,8 +33,15 @@ console.log("routes loaded");
 const app = express();
 const server = http.createServer(app);
 
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
-const allowedOrigins = [CLIENT_URL, "http://127.0.0.1:3000", "http://localhost:3000"];
+const CLIENT_URL = process.env.CLIENT_URL || "https://vibe2ship-six.vercel.app";
+console.log(`[CORS] CLIENT_URL resolved to: "${CLIENT_URL}" (process.env.CLIENT_URL="${process.env.CLIENT_URL}")`);
+
+const allowedOrigins = [
+  CLIENT_URL,
+  "https://vibe2ship-six.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
 
 const corsOptions = {
   origin(origin, callback) {
