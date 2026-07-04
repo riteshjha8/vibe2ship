@@ -2,7 +2,7 @@
 
 > 🔥 FINALPING --- AI
 
-FINALPING combines intelligent task planning, smart reminders, AI assistance, voice workflows, calendar scheduling, and real-time alerts in a polished product.
+FINALPING combines intelligent task planning,Meeting auto-join , assigment alert, smart reminders, AI assistance, voice workflows, calendar scheduling, and real-time alerts in a polished product.
 
 ---
 
@@ -15,6 +15,7 @@ FINALPING solves productivity overload with:
 - Multi-channel reminders via email, SMS, and in-app alerts
 - Real-time dashboard updates and alarm rings
 - Unified management of tasks, goals, habits, calendar, and integrations
+- Meeting auto-join when reminder fires
 
 ---
 
