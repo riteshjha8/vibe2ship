@@ -6,6 +6,7 @@ import ReminderOverlay from "@/components/ReminderOverlay";
 import AutoJoinToast from "@/components/AutoJoinToast";
 import Gold3DBackground from "@/components/Gold3DBackground";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
   title: "FinalPing AI | The Last-Minute Life Saver",
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
             </SocketProvider>
           </AuthProvider>
         </ErrorBoundary>
+        <SpeedInsights />
       </body>
     </html>
   );
