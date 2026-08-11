@@ -9,6 +9,8 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.0",
     "axios": "^1.18.1",
     "bcryptjs": "^2.4.3",
     "cohere-ai": "^7.10.1",

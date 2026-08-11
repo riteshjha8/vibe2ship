@@ -159,7 +159,7 @@ export default function FloatingAssistant() {
                     <span className="text-sm font-semibold">AI</span>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.35em] text-gold-300">Cohere Assistant</p>
+                    <p className="text-[10px] uppercase tracking-[0.35em] text-gold-300">AI Assistant</p>
                     <h2 className="text-lg font-semibold text-white">Ask anything, plan everything</h2>
                     <p className="mt-1 text-xs text-slate-400">Type a question or ask for task prioritization.</p>
                   </div>
