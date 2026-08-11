@@ -2,7 +2,7 @@
 
 > 🔥 FINALPING --- AI
 
-FINALPING combines intelligent task planning, smart reminders, AI assistance, voice workflows, calendar scheduling, and real-time alerts in a polished product.
+FINALPING combines intelligent task planning,Meeting auto-join , assigment alert, smart reminders, AI assistance, voice workflows, calendar scheduling, and real-time alerts in a polished product.
 
 ---
 
@@ -15,6 +15,7 @@ FINALPING solves productivity overload with:
 - Multi-channel reminders via email, SMS, and in-app alerts
 - Real-time dashboard updates and alarm rings
 - Unified management of tasks, goals, habits, calendar, and integrations
+- Meeting auto-join when reminder fires
 
 ---
 
@@ -143,5 +144,8 @@ NEXT_PUBLIC_API_URL=https://your-backend-host.com
 ---
 
 ## 📌 Notes
+
+ Please do not use the word **"hack"**, as it violates Fast2SMS Terms and Conditions and may result in the SMS service being blocked. Also, please avoid using or generating content that could be interpreted as **spam messages**. Ensure that all SMS content is professional, legitimate, and compliant with Fast2SMS policies.
+
 
 FINALPING is built to showcase a complete productivity ecosystem with intelligent reminders, smart task recovery, and a polished user experience.
